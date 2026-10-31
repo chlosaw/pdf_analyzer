@@ -87,13 +87,15 @@ describe('documents', () => {
     expect((await bob.get('/api/documents').expect(200)).body).toEqual([]);
   });
 
-  it('deletes a document with its chunks', async () => {
+  it('deletes a document with its chunks and its chat', async () => {
     const agent = await signedInAgent();
     const { body } = await uploadPdf(agent, await makePdf(SAMPLE_PAGES));
     await waitUntilReady(agent, body.id);
+    await agent.post(`/api/documents/${body.id}/chat`).expect(201);
 
     await agent.delete(`/api/documents/${body.id}`).expect(204);
     expect(await prisma.chunk.count()).toBe(0);
+    expect(await prisma.chat.count()).toBe(0);
     await agent.get(`/api/documents/${body.id}/file`).expect(404);
   });
 

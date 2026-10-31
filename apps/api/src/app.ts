@@ -8,6 +8,7 @@ import { requireAuth } from './middleware/auth';
 import { errorHandler } from './middleware/error';
 import { createLimiters, defaultRateLimits, type RateLimitConfig } from './middleware/rateLimit';
 import { authRouter } from './modules/auth/auth.routes';
+import { chatRouter } from './modules/chat/chat.routes';
 import { documentsRouter } from './modules/documents/documents.routes';
 
 export interface AppOptions {
@@ -32,6 +33,7 @@ export function createApp({ rateLimits }: AppOptions = {}) {
   });
   api.use('/auth', authRouter(limiters));
   api.use('/documents', requireAuth, documentsRouter(limiters));
+  api.use('/chats', requireAuth, chatRouter(limiters));
   api.use((_req, _res, next) => next(notFound('Endpoint')));
   app.use('/api', api);
 
