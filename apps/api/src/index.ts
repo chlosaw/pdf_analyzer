@@ -1,6 +1,9 @@
 import { createApp } from './app';
+import { failInterruptedIngestions } from './jobs/ingestDocument';
 import { prisma } from './lib/db';
 import { env } from './lib/env';
+
+await failInterruptedIngestions();
 
 const server = createApp().listen(env.PORT, () => {
   console.log(`API listening on http://localhost:${env.PORT} (AI: ${env.AI_PROVIDER}, storage: ${env.STORAGE_DRIVER})`);
