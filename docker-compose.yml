@@ -1,0 +1,55 @@
+# One command to run everything:  cp .env.example .env && docker compose up --build
+#   web  http://localhost:8080   (nginx: the React app, proxies /api to the api service)
+#   api  http://localhost:4000   (Express)
+#   db   localhost:5432          (Postgres 17 + pgvector)
+services:
+  db:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: pdf_analyzer
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 3s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/pdf_analyzer
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env (copy .env.example)}
+      NODE_ENV: production
+      COOKIE_SECURE: 'false' # plain http on localhost
+      STORAGE_DRIVER: ${STORAGE_DRIVER:-local}
+      LOCAL_STORAGE_DIR: /data/uploads
+      TRUST_PROXY: 1
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - '4000:4000'
+    volumes:
+      - uploads:/data/uploads
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    environment:
+      API_UPSTREAM: http://api:4000
+    depends_on:
+      - api
+    ports:
+      - '8080:80'
+
+volumes:
+  pgdata:
+  uploads:
