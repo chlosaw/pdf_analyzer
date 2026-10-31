@@ -4,9 +4,11 @@ import helmet from 'helmet';
 import { prisma } from './lib/db';
 import { env } from './lib/env';
 import { notFound } from './lib/errors';
+import { requireAuth } from './middleware/auth';
 import { errorHandler } from './middleware/error';
 import { createLimiters, defaultRateLimits, type RateLimitConfig } from './middleware/rateLimit';
 import { authRouter } from './modules/auth/auth.routes';
+import { documentsRouter } from './modules/documents/documents.routes';
 
 export interface AppOptions {
   rateLimits?: Partial<RateLimitConfig>;
@@ -29,6 +31,7 @@ export function createApp({ rateLimits }: AppOptions = {}) {
     res.json({ ok: true });
   });
   api.use('/auth', authRouter(limiters));
+  api.use('/documents', requireAuth, documentsRouter(limiters));
   api.use((_req, _res, next) => next(notFound('Endpoint')));
   app.use('/api', api);
 
