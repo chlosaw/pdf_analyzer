@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import { HttpError } from '../../lib/errors';
 import { userId } from '../../middleware/auth';
+import { getOrCreateDocumentChat, toChatDTO } from '../chat/chat.service';
 import * as documents from './documents.service';
 
 const idParam = (req: Request) => String(req.params.id);
@@ -37,6 +38,12 @@ export async function file(req: Request, res: Response) {
       'Cache-Control': 'private, max-age=3600'
     })
     .send(data);
+}
+
+export async function openChat(req: Request, res: Response) {
+  const doc = await documents.getOwnedDocument(userId(req), idParam(req));
+  const { chat, created } = await getOrCreateDocumentChat(doc);
+  res.status(created ? 201 : 200).json(toChatDTO(chat));
 }
 
 export async function remove(req: Request, res: Response) {
