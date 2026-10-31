@@ -1,0 +1,41 @@
+# Render Blueprint (New > Blueprint > pick this repo). Postgres lives on Neon (free, has pgvector)
+# and PDFs in Supabase Storage, because Render's free disk is wiped on every restart.
+services:
+  - type: web
+    name: pdf-analyzer-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./apps/api/Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL # Neon *direct* connection string, ending in ?sslmode=require
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: AI_PROVIDER
+        value: gemini
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: STORAGE_DRIVER
+        value: supabase
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: TRUST_PROXY # Render's load balancer + the web service's nginx
+        value: '2'
+      - key: SEED_DEMO
+        value: 'true'
+
+  - type: web
+    name: pdf-analyzer-web
+    runtime: docker
+    plan: free
+    dockerfilePath: ./apps/web/Dockerfile
+    dockerContext: .
+    envVars:
+      - key: API_UPSTREAM # the API service's public URL, e.g. https://pdf-analyzer-api.onrender.com
+        sync: false
