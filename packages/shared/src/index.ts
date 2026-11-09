@@ -8,6 +8,8 @@ export const MAX_FILE_SIZE_MB = 15;
 export const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 export const MAX_QUESTION_LENGTH = 2000;
 export const MAX_DOCS_PER_CHAT = 10;
+/** "Try the demo" sandboxes are deleted, with everything in them, after this long. */
+export const DEMO_SANDBOX_HOURS = 24;
 
 // ---------------------------------------------------------------------------
 // Request schemas
@@ -55,6 +57,8 @@ export interface UserDTO {
   id: string;
   email: string;
   name: string;
+  /** A temporary "Try the demo" visitor */
+  isDemo: boolean;
 }
 
 export type DocumentStatus = 'PROCESSING' | 'READY' | 'FAILED';

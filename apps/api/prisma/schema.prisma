@@ -14,9 +14,13 @@ model User {
   email        String     @unique
   name         String
   passwordHash String
+  /// Throwaway "Try the demo" visitor; deleted with all their data after DEMO_SANDBOX_HOURS
+  isDemo       Boolean    @default(false)
   createdAt    DateTime   @default(now())
   documents    Document[]
   chats        Chat[]
+
+  @@index([isDemo, createdAt])
 }
 
 enum DocumentStatus {
