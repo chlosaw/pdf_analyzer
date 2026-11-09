@@ -5,20 +5,22 @@
 Chat with your PDFs: upload documents, ask questions, and get answers that stream in with page citations you can click to jump to the source.
 
 **Live demo:** not deployed yet. The [Render blueprint](render.yaml) is ready; see [Deploying](#deploying).
-**Demo login:** `demo@pdf-analyzer.dev` / `demo1234`. The account comes with two sample PDFs: a company annual report and an employee handbook. Locally it is created by `docker compose up`.
+**Demo login:** no account needed. Click **Try the demo, no sign-up** on the sign-in page to get a private sandbox with two indexed sample PDFs (a company annual report and an employee handbook). It is deleted after 24 hours. There is also a shared account, `demo@pdf-analyzer.dev` / `demo1234`, which `docker compose up` creates locally.
 
-![Asking a question and jumping to the cited page](docs/demo.gif)
+![Trying the demo: asking a question and jumping to the cited page](docs/demo.gif)
 
 ## Features
 
 - **RAG pipeline written from scratch, no LangChain.** PDF → page text → chunks → Gemini embeddings → PostgreSQL + pgvector → similarity search → a grounded answer.
 - **Page citations.** `[1]` markers in the answer become clickable `p.3` chips. Clicking one opens that page in the PDF viewer and highlights the cited text.
 - **Streaming answers** over Server-Sent Events, with a Stop button. A partial answer is kept.
-- **Multi-document chat.** Select up to 10 PDFs and ask across all of them; each source shows which document it came from.
-- **Chat history saved per document**, plus saved multi-document chats.
-- **Limits and errors.** A 15 MB cap checked on both client and server, a `%PDF-` signature check, scanned-PDF detection ("No text found"), clear errors for password-protected and corrupt files, and rate limits on sign-ins, uploads and questions.
-- **Accounts.** JWT in an httpOnly cookie, bcrypt password hashes, and every query scoped to the signed-in user.
-- **Runs offline.** With `AI_PROVIDER=fake` the app needs no API key. It uses deterministic embeddings and extractive answers, the same mode the tests run in.
+- **Multi-document chat and saved history.** Select up to 10 PDFs and ask across all of them. Each document keeps its own chat history, and multi-document chats are saved too.
+- **Limits, errors and accounts.** A 15 MB cap checked on both client and server, a `%PDF-` signature check, scanned-PDF detection ("No text found"), clear errors for password-protected and corrupt files, and rate limits on sign-ins, uploads and questions. Sessions use a JWT in an httpOnly cookie with bcrypt password hashes, and every query is scoped to the signed-in user.
+- **Designed for the Mac.** Headings in New York, text in SF Pro and numbers in SF Mono, with light and dark themes. The sign-in page has a wall of "I have a question" in 26 languages, each set in a typeface that ships with macOS. Other systems fall back to their own fonts.
+- **Demo sandboxes.** Visitors try the app without signing up. Each gets a private account with the sample PDFs already indexed, and an hourly job deletes it, along with its stored files, after 24 hours.
+- **Runs offline.** With `AI_PROVIDER=fake` the app needs no API key: it uses deterministic embeddings and extractive answers, the same mode the tests run in.
+
+![Sign-in page with "I have a question" in 26 languages](docs/screenshot-sign-in.png)
 
 ## Tech stack
 
@@ -39,12 +41,13 @@ Chat with your PDFs: upload documents, ask questions, and get answers that strea
 
 ![Architecture diagram](docs/architecture.png)
 
-When a PDF is uploaded, the API extracts its text page by page with pdf.js, rejects scans that have no text, stores the file and returns right away. A background job then splits each page into overlapping chunks, embeds them with Gemini and writes the vectors to pgvector. Because a chunk never crosses a page, every chunk has exactly one page number. To answer a question, the API embeds it and pulls the nearest chunks from the chat's documents (cosine distance, `<=>`). It sends them to the model as numbered sources, streams the reply over SSE and saves the answer with the pages it cited. In Docker, nginx serves the React build and proxies `/api` to Express, so the auth cookie stays same-origin.
+When a PDF is uploaded, the API extracts its text page by page with pdf.js, rejects scans that have no text, stores the file and returns right away. A background job then splits each page into overlapping chunks, embeds them with Gemini and writes the vectors to pgvector. Because a chunk never crosses a page, every chunk has exactly one page number. To answer a question, the API embeds it and pulls the nearest chunks from the chat's documents (cosine distance, `<=>`). It sends them to the model as numbered sources, streams the reply over SSE and saves the answer with the pages it cited. Demo sandboxes are ordinary accounts flagged `isDemo`; a second in-process job removes them after a day. In Docker, nginx serves the React build and proxies `/api` to Express, so the auth cookie stays same-origin.
 
 ```
 apps/api/src/
-  modules/  auth/  documents/  chat/  embeddings/   (routes → controllers → services)
+  modules/  auth/  documents/  chat/  embeddings/  demo/   (routes → controllers → services)
   jobs/     ingestDocument.ts                       (chunk → embed → store, off the request path)
+            cleanupDemoSandboxes.ts                 (hourly: delete demo sandboxes older than 24 h)
   middleware/  lib/
 apps/web/src/
   api/  components/  features/{auth,documents,chat,viewer}/  pages/  lib/
