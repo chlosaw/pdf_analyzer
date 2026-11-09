@@ -1,6 +1,7 @@
 import { cn } from '@/lib/utils';
+import { MagnifiedWordmark } from './MagnifiedWordmark';
 
-/** A question mark in New York italic on an ink tile, next to the wordmark. */
+/** A question mark in New York italic on an ink tile, next to the wordmark and its wandering magnifier. */
 export function Logo({ className, size = 'md' }: { className?: string; size?: 'md' | 'lg' }) {
   return (
     <span className={cn('inline-flex items-center gap-2.5', className)}>
@@ -13,9 +14,10 @@ export function Logo({ className, size = 'md' }: { className?: string; size?: 'm
       >
         ?
       </span>
-      <span className={cn('font-serif font-semibold tracking-tight', size === 'lg' ? 'text-2xl' : 'text-lg')}>
-        PDF Analyzer
-      </span>
+      <MagnifiedWordmark
+        text="PDF Analyzer"
+        className={cn('font-serif font-semibold tracking-tight', size === 'lg' ? 'text-2xl' : 'text-lg')}
+      />
     </span>
   );
 }
