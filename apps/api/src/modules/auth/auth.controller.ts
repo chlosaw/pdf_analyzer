@@ -2,6 +2,7 @@ import type { Request, Response } from 'express';
 import { loginSchema, registerSchema } from '@pdf-analyzer/shared';
 import { HttpError } from '../../lib/errors';
 import { clearAuthCookie, setAuthCookie, userId } from '../../middleware/auth';
+import { createSandbox } from '../demo/demo.service';
 import * as auth from './auth.service';
 
 export async function register(req: Request, res: Response) {
@@ -14,6 +15,13 @@ export async function login(req: Request, res: Response) {
   const user = await auth.login(loginSchema.parse(req.body));
   setAuthCookie(res, user.id);
   res.json(auth.toUserDTO(user));
+}
+
+/** "Try the demo": a fresh sandbox with the sample PDFs, signed in straight away. */
+export async function demo(_req: Request, res: Response) {
+  const user = await createSandbox();
+  setAuthCookie(res, user.id);
+  res.status(201).json(auth.toUserDTO(user));
 }
 
 export function logout(_req: Request, res: Response) {

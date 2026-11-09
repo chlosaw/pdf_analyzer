@@ -52,6 +52,15 @@ export function useRegister() {
   });
 }
 
+/** "Try the demo": the API creates a throwaway sandbox and signs us into it. */
+export function useStartDemo() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => api<UserDTO>('/auth/demo', { method: 'POST' }),
+    onSuccess: (user) => qc.setQueryData(keys.me, user)
+  });
+}
+
 export function useLogout() {
   const qc = useQueryClient();
   return useMutation({

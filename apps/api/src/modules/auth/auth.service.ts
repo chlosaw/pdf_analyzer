@@ -9,7 +9,7 @@ const BCRYPT_ROUNDS = isTest ? 4 : 12;
 // Compared against when the email doesn't exist, so both paths take the same time.
 const DUMMY_HASH = bcrypt.hashSync('not-a-real-password', BCRYPT_ROUNDS);
 
-export const toUserDTO = (u: User): UserDTO => ({ id: u.id, email: u.email, name: u.name });
+export const toUserDTO = (u: User): UserDTO => ({ id: u.id, email: u.email, name: u.name, isDemo: u.isDemo });
 
 export const hashPassword = (password: string) => bcrypt.hash(password, BCRYPT_ROUNDS);
 
