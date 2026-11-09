@@ -15,7 +15,7 @@ const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)'
  * visits a few random letters (magnifying each one), then glides back and is an icon again.
  *
  * The lens holds a second, scaled-up copy of the whole logo, offset so whatever is under the lens centre
- * appears enlarged, like real glass. At home it shows a "?" instead; the two crossfade with distance.
+ * appears enlarged, like real glass. At home it sits over the empty space before the text, so it is plain glass.
  * Position updates go straight to the DOM in a requestAnimationFrame loop, so React never re-renders per
  * frame. With reduced motion the glass simply stays an icon.
  */
@@ -23,14 +23,12 @@ export function MagnifiedWordmark({ text, className }: { text: string; className
   const wrapRef = useRef<HTMLSpanElement>(null);
   const lensRef = useRef<HTMLSpanElement>(null);
   const zoomedRef = useRef<HTMLSpanElement>(null);
-  const questionRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
     const wrap = wrapRef.current;
     const lens = lensRef.current;
     const zoomed = zoomedRef.current;
-    const question = questionRef.current;
-    if (!wrap || !lens || !zoomed || !question || reducedMotion()) return;
+    if (!wrap || !lens || !zoomed || reducedMotion()) return;
 
     // Letter centres (skipping spaces), measured from the per-letter spans, in wrapper coordinates.
     let centres: number[] = [];
@@ -89,8 +87,6 @@ export function MagnifiedWordmark({ text, className }: { text: string; className
       const y = midY + Math.sin(now / 650) * 1.5 * away; // a hand-held wobble, only while moving about
       lens.style.transform = `translate(${x - home()}px, ${y - midY}px)`;
       zoomed.style.transform = `translate(${radius - ZOOM * x}px, ${radius - ZOOM * y}px) scale(${ZOOM})`;
-      zoomed.style.opacity = String(away);
-      question.style.opacity = String(1 - away);
       frame = requestAnimationFrame(tick);
     };
     frame = requestAnimationFrame(tick);
@@ -121,17 +117,11 @@ export function MagnifiedWordmark({ text, className }: { text: string; className
         <span className="absolute inset-0 overflow-hidden rounded-full bg-card shadow-[0_2px_10px_hsl(var(--foreground)/0.18)] ring-[0.11em] ring-primary">
           <span
             ref={zoomedRef}
-            className="absolute left-0 top-0 origin-top-left whitespace-nowrap opacity-0"
+            className="absolute left-0 top-0 origin-top-left whitespace-nowrap"
             // The same layout as the base text (spacer + letters), so lens and text coordinates line up.
           >
             {spacer}
             {text}
-          </span>
-          <span
-            ref={questionRef}
-            className="absolute inset-0 grid place-items-center font-serif text-[1.05em] font-semibold italic text-primary"
-          >
-            ?
           </span>
           {/* Glare on the glass */}
           <span className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_30%_25%,hsl(0_0%_100%/0.55),transparent_45%)]" />
