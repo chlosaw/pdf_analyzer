@@ -60,9 +60,9 @@ export function UploadDropzone() {
         onDragLeave={() => setDragging(false)}
         onDrop={onDrop}
         className={cn(
-          'flex w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed p-8 text-center transition-colors',
-          'hover:border-foreground/30 hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-          dragging && 'border-foreground/50 bg-muted',
+          'flex w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-primary/25 bg-card/80 p-10 text-center backdrop-blur transition-colors',
+          'hover:border-primary/50 hover:bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+          dragging && 'border-primary bg-primary/5',
           busy && 'cursor-wait'
         )}
       >
@@ -78,8 +78,8 @@ export function UploadDropzone() {
           </>
         ) : (
           <>
-            <FileUp className="size-7 text-muted-foreground" />
-            <span className="text-sm font-medium">Drop PDFs here or click to upload</span>
+            <FileUp className="size-8 text-primary" strokeWidth={1.5} />
+            <span className="font-serif text-lg font-medium">Drop PDFs here or click to upload</span>
             <span className="text-xs text-muted-foreground">
               Text-based PDFs up to {MAX_FILE_SIZE_MB} MB. Scanned documents aren't supported.
             </span>

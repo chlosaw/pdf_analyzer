@@ -3,6 +3,7 @@ import { ArrowUp, Bot, Eraser, Loader2, Square, User } from 'lucide-react';
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { toast } from 'sonner';
 import { MAX_QUESTION_LENGTH, type ChatDetailDTO, type Citation, type MessageDTO } from '@pdf-analyzer/shared';
+import { QuestionBackdrop } from '@/components/QuestionBackdrop';
 import { AnswerContent, SourceList } from '@/features/chat/AnswerContent';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -105,11 +106,14 @@ export function ChatPanel({ chat, onCite }: { chat: ChatDetailDTO; onCite: (c: C
         </Button>
       </div>
 
-      <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-4" aria-live="polite">
+      <div className="relative min-h-0 flex-1 space-y-5 overflow-y-auto p-4" aria-live="polite">
+        {empty && <QuestionBackdrop />}
         {empty && (
-          <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
+          <div className="relative flex h-full flex-col items-center justify-center gap-4 text-center">
             <div className="space-y-1">
-              <p className="font-medium">Ask anything about {multi ? 'these documents' : 'this document'}</p>
+              <p className="font-serif text-2xl font-semibold">
+                Ask anything about {multi ? 'these documents' : 'this document'}
+              </p>
               <p className="text-sm text-muted-foreground">
                 Answers cite the pages they come from. Click a citation to jump there.
               </p>
@@ -217,7 +221,7 @@ export function ChatPanel({ chat, onCite }: { chat: ChatDetailDTO; onCite: (c: C
 function UserBubble({ text }: { text: string }) {
   return (
     <div className="flex justify-end gap-2">
-      <div className="max-w-[85%] whitespace-pre-wrap rounded-2xl rounded-br-sm bg-primary px-3.5 py-2 text-sm text-primary-foreground">
+      <div className="max-w-[85%] whitespace-pre-wrap rounded-2xl rounded-br-md bg-primary px-4 py-2.5 text-sm text-primary-foreground shadow-sm">
         {text}
       </div>
       <Avatar>
@@ -233,7 +237,7 @@ function AssistantBubble({ children }: { children: React.ReactNode }) {
       <Avatar>
         <Bot />
       </Avatar>
-      <div className="min-w-0 max-w-[90%] rounded-2xl rounded-bl-sm bg-muted px-3.5 py-2.5">{children}</div>
+      <div className="min-w-0 max-w-[90%] rounded-2xl rounded-bl-md border bg-card px-4 py-3 shadow-sm">{children}</div>
     </div>
   );
 }
