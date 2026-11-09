@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ApiError } from '@/api/client';
+import { TryDemoButton } from './TryDemoButton';
 
 type FieldErrors = Record<string, string[] | undefined>;
 
@@ -65,7 +66,13 @@ export function AuthForm<T>({
             <CardTitle className="text-xl">{title}</CardTitle>
             <CardDescription>{description}</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
+            <TryDemoButton />
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              <span className="h-px flex-1 bg-border" />
+              or with email
+              <span className="h-px flex-1 bg-border" />
+            </div>
             <form onSubmit={handleSubmit} noValidate className="space-y-4">
               {fields.map((f) => (
                 <div key={f.name} className="space-y-2">
