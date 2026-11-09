@@ -2,6 +2,7 @@ import { FileSearch, LogOut } from 'lucide-react';
 import { Link, Outlet, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useLogout, useMe } from '@/api/queries';
+import { DemoBanner } from '@/features/auth/DemoBanner';
 
 export function AppLayout() {
   const { data: user } = useMe();
@@ -26,6 +27,7 @@ export function AppLayout() {
           </Button>
         </div>
       </header>
+      {user?.isDemo && <DemoBanner />}
       <main className="min-h-0 flex-1">
         <Outlet />
       </main>
