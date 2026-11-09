@@ -95,7 +95,11 @@ export function AuthForm<T>({
         </section>
 
         <div className="mx-auto w-full max-w-sm space-y-6">
-          <Logo className="flex justify-center rounded-full bg-background/80 py-1 backdrop-blur lg:hidden" />
+          <div className="flex justify-center lg:hidden">
+            <span className="rounded-full bg-background/80 px-3 py-1 backdrop-blur">
+              <Logo />
+            </span>
+          </div>
           <Card className="bg-card/95 shadow-xl shadow-primary/5 backdrop-blur">
             <CardHeader>
               <CardTitle className="font-serif text-2xl">{title}</CardTitle>
