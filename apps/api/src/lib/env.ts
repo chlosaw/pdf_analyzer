@@ -16,7 +16,9 @@ const schema = z
 
     AI_PROVIDER: z.enum(['gemini', 'fake']).default('gemini'),
     GEMINI_API_KEY: z.string().optional(),
-    GEMINI_CHAT_MODEL: z.string().default('gemini-2.5-flash'),
+    GEMINI_CHAT_MODEL: z.string().default('gemini-3.8-flash'),
+    /** Used for retries when the main model is overloaded or too slow (common on the free tier) */
+    GEMINI_FALLBACK_CHAT_MODEL: z.string().default('gemini-3.5-flash-lite'),
     GEMINI_EMBEDDING_MODEL: z.string().default('gemini-embedding-001'),
 
     STORAGE_DRIVER: z.enum(['local', 'supabase']).default('local'),

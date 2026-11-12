@@ -30,7 +30,7 @@ Chat with your PDFs: upload documents, ask questions, and get answers that strea
 | UI       | Tailwind CSS, shadcn/ui, lucide icons, react-markdown                      |
 | Backend  | Node.js, Express 5, TypeScript, Zod, Multer, pdf.js                        |
 | Database | PostgreSQL + Prisma, pgvector for embeddings                               |
-| AI       | Google Gemini: `gemini-embedding-001` (768-d) and `gemini-2.5-flash`       |
+| AI       | Google Gemini: `gemini-embedding-001` (768-d) and `gemini-3.8-flash`       |
 | Shared   | `packages/shared`: Zod schemas, API types and limits used by both apps     |
 | Auth     | JWT in httpOnly cookies + bcrypt                                           |
 | Tests    | Vitest + Supertest (API), Playwright (end-to-end)                          |
