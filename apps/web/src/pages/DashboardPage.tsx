@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { MAX_DOCS_PER_CHAT } from '@pdf-analyzer/shared';
 import { useCreateChat } from '@/api/queries';
-import { GradientBackdrop } from '@/components/GradientBackdrop';
+import { SilkBackdrop } from '@/components/SilkBackdrop';
 import { Button } from '@/components/ui/button';
 import { MultiChatList } from '@/features/chat/MultiChatList';
 import { DocumentList } from '@/features/documents/DocumentList';
@@ -44,7 +44,7 @@ export function DashboardPage() {
 
   return (
     <div className="relative h-full overflow-y-auto">
-      <GradientBackdrop className="fixed top-14" />
+      <SilkBackdrop className="fixed top-14" />
       <div className="relative mx-auto max-w-4xl space-y-8 px-4 py-10">
         <section className="space-y-4">
           <div>
