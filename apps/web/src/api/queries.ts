@@ -1,5 +1,8 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient, type QueryKey } from '@tanstack/react-query';
 import type {
+  AdminStatsDTO,
+  AdminUserDTO,
+  AdminUserListQuery,
   ChatDTO,
   ChatDetailDTO,
   ChatListQuery,
@@ -20,6 +23,8 @@ export const keys = {
   documentList: (query: DocumentListQuery) => ['documents', 'list', query] as const,
   chats: ['chats'] as const,
   chatList: (query: ChatListQuery) => ['chats', 'list', query] as const,
+  adminStats: ['admin', 'stats'] as const,
+  adminUsers: (query: AdminUserListQuery) => ['admin', 'users', query] as const,
   chat: (id: string) => ['chats', id] as const,
   documentChat: (documentId: string) => ['documents', documentId, 'chat'] as const
 };
@@ -80,7 +85,7 @@ export function useLogout() {
 // ---- documents ----------------------------------------------------------------
 
 /** `?q=&status=` from the defined, non-empty values */
-const toSearch = (query: Record<string, string | number | undefined>) => {
+const toSearch = (query: Record<string, string | number | boolean | undefined>) => {
   const params = new URLSearchParams();
   for (const [k, v] of Object.entries(query)) if (v !== undefined && v !== '') params.set(k, String(v));
   const s = params.toString();
@@ -212,5 +217,44 @@ export function useClearHistory(chatId: string) {
   return useMutation({
     mutationFn: () => api<void>(`/chats/${chatId}/messages`, { method: 'DELETE' }),
     onSuccess: () => qc.setQueryData<ChatDetailDTO>(keys.chat(chatId), (old) => old && { ...old, messages: [] })
+  });
+}
+
+// ---- admin --------------------------------------------------------------------
+
+export function useAdminStats() {
+  return useQuery({ queryKey: keys.adminStats, queryFn: () => api<AdminStatsDTO>('/admin/stats') });
+}
+
+export function useAdminUsers(query: AdminUserListQuery) {
+  return useQuery({
+    queryKey: keys.adminUsers(query),
+    queryFn: () => api<Page<AdminUserDTO>>(`/admin/users${toSearch(query)}`),
+    placeholderData: keepPreviousData
+  });
+}
+
+export function useUpdateUserRole() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, role }: { id: string; role: AdminUserDTO['role'] }) =>
+      api<AdminUserDTO>(`/admin/users/${id}`, { method: 'PATCH', json: { role } }),
+    ...optimisticListUpdate<AdminUserDTO, { id: string; role: AdminUserDTO['role'] }>(
+      qc,
+      ['admin', 'users'],
+      (items, v) => items.map((u) => (u.id === v.id ? { ...u, role: v.role } : u))
+    ),
+    onSettled: () => qc.invalidateQueries({ queryKey: ['admin'] })
+  });
+}
+
+export function useDeleteUser() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api<void>(`/admin/users/${id}`, { method: 'DELETE' }),
+    ...optimisticListUpdate<AdminUserDTO, string>(qc, ['admin', 'users'], (items, id) =>
+      items.filter((u) => u.id !== id)
+    ),
+    onSettled: () => qc.invalidateQueries({ queryKey: ['admin'] })
   });
 }
