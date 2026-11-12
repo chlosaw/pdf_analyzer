@@ -184,7 +184,11 @@ export async function* answerQuestion({
         message:
           status === 429
             ? 'The AI service is rate-limited right now. Please wait a minute and try again.'
-            : 'Something went wrong while generating the answer. Please try again.'
+            : status === 503
+              ? 'The AI service is overloaded right now. This is usually temporary; please try again in a minute.'
+              : status === 504
+                ? 'The AI service took too long to respond; it may be overloaded. Please try again in a minute.'
+                : 'Something went wrong while generating the answer. Please try again.'
       };
     }
   }
