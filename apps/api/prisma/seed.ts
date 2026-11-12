@@ -1,6 +1,7 @@
 /**
- * Demo data: a demo account with two indexed PDFs, so the live demo works without uploading anything.
- * Idempotent: creates the user and any missing demo document, leaves everything else alone.
+ * Demo data: a demo account with two indexed PDFs, so the live demo works without uploading anything,
+ * plus an administrator when ADMIN_EMAIL and ADMIN_PASSWORD are set.
+ * Idempotent: creates the users and any missing demo document, leaves everything else alone.
  *
  *   npm run db:seed -w apps/api      (also runs on container start when SEED_DEMO=true)
  */
@@ -30,7 +31,27 @@ async function seedDemo() {
   console.log(`Demo account ready: ${DEMO_EMAIL} / ${DEMO_PASSWORD}`);
 }
 
+/** There is deliberately no default admin password: this also runs on the live deployment. */
+async function seedAdmin() {
+  const email = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+  const password = process.env.ADMIN_PASSWORD;
+  if (!email || !password) return;
+  if (password.length < 12) throw new Error('ADMIN_PASSWORD must be at least 12 characters');
+
+  const existing = await prisma.user.findUnique({ where: { email } });
+  if (existing) {
+    // Never overwrite an existing password from an environment variable; just make sure of the role.
+    await prisma.user.update({ where: { id: existing.id }, data: { role: 'ADMIN' } });
+  } else {
+    await prisma.user.create({
+      data: { email, name: 'Administrator', role: 'ADMIN', passwordHash: await hashPassword(password) }
+    });
+  }
+  console.log(`Admin account ready: ${email}`);
+}
+
 seedDemo()
+  .then(seedAdmin)
   .catch((err) => {
     console.error(err);
     process.exitCode = 1;

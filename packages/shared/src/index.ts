@@ -85,9 +85,24 @@ export const chatListQuerySchema = z.object({
 });
 export type ChatListQuery = Partial<z.output<typeof chatListQuerySchema>>;
 
+export const adminUserListQuerySchema = z.object({
+  ...pagination,
+  role: z.enum(['USER', 'ADMIN']).optional(),
+  /** Demo sandboxes are hidden unless asked for */
+  includeDemo: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((v) => v === 'true')
+});
+export type AdminUserListQuery = { q?: string; page?: number; pageSize?: number; role?: Role; includeDemo?: boolean };
+
+export const updateRoleSchema = z.object({ role: z.enum(['USER', 'ADMIN']) });
+
 // ---------------------------------------------------------------------------
 // API response shapes
 // ---------------------------------------------------------------------------
+
+export type Role = 'USER' | 'ADMIN';
 
 export interface UserDTO {
   id: string;
@@ -95,6 +110,23 @@ export interface UserDTO {
   name: string;
   /** A temporary "Try the demo" visitor */
   isDemo: boolean;
+  role: Role;
+}
+
+export interface AdminUserDTO extends UserDTO {
+  createdAt: string;
+  documentCount: number;
+  chatCount: number;
+}
+
+export interface AdminStatsDTO {
+  users: number;
+  /** Of which temporary demo sandboxes */
+  demoUsers: number;
+  documents: number;
+  chats: number;
+  questionsLast7Days: number;
+  storageBytes: number;
 }
 
 export type DocumentStatus = 'PROCESSING' | 'READY' | 'FAILED';

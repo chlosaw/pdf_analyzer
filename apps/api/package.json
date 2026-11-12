@@ -13,7 +13,8 @@
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "make-admin": "tsx prisma/make-admin.ts"
   },
   "dependencies": {
     "@google/genai": "^1.30.0",
