@@ -6,7 +6,7 @@ test('"Try the demo" opens a sandbox with sample PDFs that answer questions', as
 
   await expect(page.getByText(/you're in a demo sandbox/i)).toBeVisible();
   const docs = page.getByRole('list', { name: 'Documents' });
-  await expect(docs.getByText('Ready')).toHaveCount(2);
+  await expect(docs.getByText('Ready', { exact: true })).toHaveCount(2);
 
   await docs
     .getByRole('link', { name: /Annual Report 2025/ })

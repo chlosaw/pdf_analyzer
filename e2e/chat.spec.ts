@@ -25,7 +25,7 @@ test('upload a PDF, ask a question, and jump to the cited page', async ({ page }
 
   await page.getByTestId('file-input').setInputFiles(fixture('freedonia.pdf'));
   const row = page.getByRole('list', { name: 'Documents' }).getByRole('listitem').first();
-  await expect(row.getByText('Ready')).toBeVisible({ timeout: 15_000 });
+  await expect(row.getByText('Ready', { exact: true })).toBeVisible({ timeout: 15_000 });
 
   await row.getByRole('link', { name: 'freedonia.pdf' }).click();
   await expect(page).toHaveURL(/\/chats\//);
