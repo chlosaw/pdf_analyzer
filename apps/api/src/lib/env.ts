@@ -31,6 +31,16 @@ const schema = z
     TRUST_PROXY: z.coerce.number().int().min(0).default(1)
   })
   .superRefine((env, ctx) => {
+    // The .env.example placeholder is long enough to pass the length check, and it's public. Refuse it on
+    // real (HTTPS) deployments; docker compose on http://localhost (COOKIE_SECURE=false) may keep it.
+    const deployed = env.NODE_ENV === 'production' && env.COOKIE_SECURE !== 'false';
+    if (deployed && /replace-with|changeme|secret{2,}/i.test(env.JWT_SECRET)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['JWT_SECRET'],
+        message: 'Still the example value. Generate one with: openssl rand -base64 48'
+      });
+    }
     if (env.AI_PROVIDER === 'gemini' && !env.GEMINI_API_KEY) {
       ctx.addIssue({ code: 'custom', path: ['GEMINI_API_KEY'], message: 'Required when AI_PROVIDER=gemini' });
     }
