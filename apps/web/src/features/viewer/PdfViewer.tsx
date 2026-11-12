@@ -136,7 +136,14 @@ export function PdfViewer({
         </div>
       </div>
 
-      <div ref={containerRef} className="min-h-0 flex-1 overflow-auto p-4">
+      {/* Focusable so keyboard users can scroll the page with the arrow keys */}
+      <div
+        ref={containerRef}
+        tabIndex={0}
+        role="region"
+        aria-label={`PDF page ${page}`}
+        className="min-h-0 flex-1 overflow-auto p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+      >
         <Document
           file={file}
           options={PDF_OPTIONS}

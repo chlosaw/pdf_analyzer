@@ -30,5 +30,6 @@ export default defineConfig({
   },
   server: { port: 5173, proxy },
   preview: { proxy, headers: { 'Content-Security-Policy': csp, 'X-Content-Type-Options': 'nosniff' } },
-  test: { environment: 'node' }
+  // Node by default; component tests opt into jsdom with a `// @vitest-environment jsdom` comment.
+  test: { environment: 'node', setupFiles: ['./src/test/setup.ts'] }
 });
