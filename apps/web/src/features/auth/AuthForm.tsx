@@ -2,7 +2,7 @@ import { BookOpenCheck, History, Loader2, Quote } from 'lucide-react';
 import { useState, type FormEvent, type ReactNode } from 'react';
 import type { ZodSchema } from 'zod';
 import { Logo } from '@/components/Logo';
-import { GradientBackdrop } from '@/components/GradientBackdrop';
+import { SilkBackdrop } from '@/components/SilkBackdrop';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -65,7 +65,7 @@ export function AuthForm<T>({
 
   return (
     <div className="relative min-h-dvh overflow-hidden">
-      <GradientBackdrop intensity="bold" />
+      <SilkBackdrop intensity="bold" />
       <div className="relative mx-auto grid min-h-dvh max-w-6xl items-center gap-10 px-4 py-10 lg:grid-cols-[1.1fr_1fr] lg:px-8">
         <section className="relative hidden lg:block">
           <Logo size="lg" />
