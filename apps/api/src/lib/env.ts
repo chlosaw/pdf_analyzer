@@ -27,6 +27,21 @@ const schema = z
     SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
     SUPABASE_BUCKET: z.string().default('pdfs'),
 
+    /**
+     * Other origins allowed to call the API from a browser, comma-separated (e.g. https://app.example.com).
+     * Empty by default: the web app is served from the same origin, so nothing else needs access.
+     */
+    CORS_ORIGINS: z
+      .string()
+      .default('')
+      .transform((s) =>
+        s
+          .split(',')
+          .map((o) => o.trim().replace(/\/$/, ''))
+          .filter(Boolean)
+      )
+      .pipe(z.array(z.url({ protocol: /^https?$/ }))),
+
     /** Number of reverse proxies in front of the API (nginx, Render), so rate limits see the real client IP. */
     TRUST_PROXY: z.coerce.number().int().min(0).default(1)
   })

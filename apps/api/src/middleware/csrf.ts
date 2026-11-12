@@ -10,8 +10,12 @@ const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
  * send it are checked by Origin instead. Requests with neither header aren't from a browser page (curl, tests),
  * so there is no victim's cookie to abuse.
  */
-export function verifyOrigin(req: Request, _res: Response, next: NextFunction) {
+export const verifyOrigin = (trustedOrigins: string[]) => (req: Request, _res: Response, next: NextFunction) => {
   if (SAFE_METHODS.has(req.method)) return next();
+
+  const origin = req.get('origin');
+  // Origins trusted through CORS_ORIGINS (e.g. a frontend on another subdomain) may write too.
+  if (origin && trustedOrigins.includes(origin)) return next();
 
   const site = req.get('sec-fetch-site');
   if (site) {
@@ -20,7 +24,6 @@ export function verifyOrigin(req: Request, _res: Response, next: NextFunction) {
     return reject(req, next, `sec-fetch-site=${site}`);
   }
 
-  const origin = req.get('origin');
   if (!origin) return next();
   let originHost: string;
   try {
@@ -32,7 +35,7 @@ export function verifyOrigin(req: Request, _res: Response, next: NextFunction) {
   const allowed = [req.get('x-forwarded-host'), req.get('host')].filter(Boolean);
   if (allowed.includes(originHost)) return next();
   return reject(req, next, `origin=${origin}`);
-}
+};
 
 function reject(req: Request, next: NextFunction, reason: string) {
   logSecurityEvent('csrf_blocked', req, { reason });

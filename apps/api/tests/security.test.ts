@@ -44,6 +44,34 @@ describe('security', () => {
     });
   });
 
+  describe('CORS', () => {
+    it('gives other origins no access by default', async () => {
+      const res = await request(createApp()).get('/api/health').set('Origin', 'https://evil.example').expect(200);
+      expect(res.headers).not.toHaveProperty('access-control-allow-origin');
+      const preflight = await request(createApp())
+        .options('/api/documents')
+        .set('Origin', 'https://evil.example')
+        .set('Access-Control-Request-Method', 'DELETE');
+      expect(preflight.headers).not.toHaveProperty('access-control-allow-origin');
+    });
+
+    it('allows only the configured origins, with credentials', async () => {
+      const app = createApp({ corsOrigins: ['https://app.example.com'] });
+      const res = await request(app).get('/api/health').set('Origin', 'https://app.example.com').expect(200);
+      expect(res.headers['access-control-allow-origin']).toBe('https://app.example.com');
+      expect(res.headers['access-control-allow-credentials']).toBe('true');
+      // ...and trusts them for writes despite Sec-Fetch-Site: same-site
+      const login = await request(app)
+        .post('/api/auth/login')
+        .set('Origin', 'https://app.example.com')
+        .set('Sec-Fetch-Site', 'same-site')
+        .send(user);
+      expect(login.status).toBe(401); // got past the origin check; the password is what's wrong
+      const other = await request(app).get('/api/health').set('Origin', 'https://other.example.com');
+      expect(other.headers).not.toHaveProperty('access-control-allow-origin');
+    });
+  });
+
   it('locks an account after repeated wrong passwords, from any IP', async () => {
     const app = createApp({ rateLimits: { accountLockout: 3, auth: 100 } });
     await request(app).post('/api/auth/register').send(user).expect(201);
