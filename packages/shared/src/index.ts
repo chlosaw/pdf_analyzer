@@ -8,6 +8,10 @@ export const MAX_FILE_SIZE_MB = 15;
 export const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 export const MAX_QUESTION_LENGTH = 2000;
 export const MAX_DOCS_PER_CHAT = 10;
+/** Stops "PDF bombs": small files with thousands of pages that would tie up the server parsing them */
+export const MAX_PAGES = 500;
+/** Per account, so one user can't fill the storage bucket */
+export const MAX_DOCUMENTS_PER_USER = 50;
 /** "Try the demo" sandboxes are deleted, with everything in them, after this long. */
 export const DEMO_SANDBOX_HOURS = 24;
 
@@ -21,7 +25,10 @@ export const registerSchema = z.object({
   name: z.string().trim().min(1, 'Name is required').max(80),
   email,
   // bcrypt only uses the first 72 bytes of a password
-  password: z.string().min(8, 'Password must be at least 8 characters').max(72)
+  password: z
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .refine((p) => new TextEncoder().encode(p).length <= 72, 'Password is too long (72 bytes at most)')
 });
 export type RegisterInput = z.infer<typeof registerSchema>;
 

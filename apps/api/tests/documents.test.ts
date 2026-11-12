@@ -1,8 +1,9 @@
-import { MAX_FILE_SIZE_BYTES } from '@pdf-analyzer/shared';
+import { MAX_DOCUMENTS_PER_USER, MAX_FILE_SIZE_BYTES, MAX_PAGES } from '@pdf-analyzer/shared';
 import request from 'supertest';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createApp } from '../src/app';
 import { prisma } from '../src/lib/db';
+import { safeFileName } from '../src/modules/documents/documents.service';
 import { makePdf, resetDb, SAMPLE_PAGES, signedInAgent, uploadPdf, waitUntilReady } from './helpers';
 
 describe('documents', () => {
@@ -68,6 +69,52 @@ describe('documents', () => {
     const res = await uploadPdf(agent, big, 'huge.pdf');
     expect(res.status).toBe(413);
     expect(res.body.code).toBe('FILE_TOO_LARGE');
+  });
+
+  it('rejects PDFs with too many pages (PDF bombs)', async () => {
+    const agent = await signedInAgent();
+    const res = await uploadPdf(agent, await makePdf(Array(MAX_PAGES + 1).fill('page')));
+    expect(res.status).toBe(422);
+    expect(res.body.code).toBe('TOO_MANY_PAGES');
+  });
+
+  it('caps the number of documents per account', async () => {
+    const agent = await signedInAgent();
+    const { body: me } = await agent.get('/api/auth/me').expect(200);
+    await prisma.document.createMany({
+      data: Array.from({ length: MAX_DOCUMENTS_PER_USER }, (_, i) => ({
+        userId: me.id,
+        name: `doc${i}.pdf`,
+        storageKey: `none/${i}`,
+        sizeBytes: 1,
+        pageCount: 1,
+        status: 'READY' as const
+      }))
+    });
+    const res = await uploadPdf(agent, await makePdf(SAMPLE_PAGES));
+    expect(res.status).toBe(409);
+    expect(res.body.code).toBe('DOCUMENT_LIMIT');
+  });
+
+  it('cleans control, bidi-override and path characters out of file names', async () => {
+    const agent = await signedInAgent();
+    const res = await uploadPdf(agent, await makePdf(SAMPLE_PAGES), '../../etc/\u202Efdp.exe\u200F.pdf');
+    expect(res.status).toBe(201);
+    expect(res.body.name).toBe('fdp.exe.pdf');
+
+    expect(safeFileName('a/b\\c.pdf')).toBe('a_b_c.pdf');
+    expect(safeFileName('\u0000\u202E ')).toBe('document.pdf');
+    expect(safeFileName('x'.repeat(500))).toHaveLength(200);
+  });
+
+  it('answers a malformed multipart body with 400, not 500', async () => {
+    const agent = await signedInAgent();
+    const res = await agent
+      .post('/api/documents')
+      .set('Content-Type', 'multipart/form-data; boundary=x')
+      .send('--x\r\nContent-Disposition: form-data; name="file"; filename="a\u0007.pdf"\r\n\r\n%PDF-\r\n--x--');
+    expect(res.status).toBe(400);
+    expect(res.body.code).toBe('UPLOAD_ERROR');
   });
 
   it('requires a file', async () => {

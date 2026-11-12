@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express';
 import { HttpError } from '../../lib/errors';
+import { logSecurityEvent } from '../../lib/securityLog';
 import { userId } from '../../middleware/auth';
 import { getOrCreateDocumentChat, toChatDTO } from '../chat/chat.service';
 import * as documents from './documents.service';
@@ -14,12 +15,17 @@ export async function list(req: Request, res: Response) {
 export async function upload(req: Request, res: Response) {
   const file = req.file;
   if (!file) throw new HttpError(400, 'Attach a PDF in the "file" field', 'NO_FILE');
-  const doc = await documents.createDocument(userId(req), {
-    // multer decodes file names as latin1
-    originalName: Buffer.from(file.originalname, 'latin1').toString('utf8'),
-    buffer: file.buffer,
-    size: file.size
-  });
+  const doc = await documents
+    .createDocument(userId(req), {
+      // multer decodes file names as latin1
+      originalName: Buffer.from(file.originalname, 'latin1').toString('utf8'),
+      buffer: file.buffer,
+      size: file.size
+    })
+    .catch((err: unknown) => {
+      if (err instanceof HttpError) logSecurityEvent('upload_rejected', req, { code: err.code, size: file.size });
+      throw err;
+    });
   res.status(201).json(documents.toDocumentDTO(doc));
 }
 
