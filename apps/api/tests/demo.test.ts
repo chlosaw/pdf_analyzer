@@ -17,7 +17,7 @@ describe('demo sandbox', () => {
     expect(res.body).toMatchObject({ name: 'Demo Visitor', isDemo: true });
     expect(res.headers['set-cookie'][0]).toMatch(/^token=/);
 
-    const docs = (await agent.get('/api/documents').expect(200)).body;
+    const docs = (await agent.get('/api/documents').expect(200)).body.items;
     expect(docs).toHaveLength(2);
     expect(docs.every((d: { status: string }) => d.status === 'READY')).toBe(true);
 

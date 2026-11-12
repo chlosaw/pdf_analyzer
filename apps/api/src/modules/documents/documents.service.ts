@@ -1,8 +1,10 @@
 import { randomUUID } from 'node:crypto';
-import type { Document } from '@prisma/client';
-import { MAX_DOCUMENTS_PER_USER, type DocumentDTO } from '@pdf-analyzer/shared';
+import type { Document, Prisma } from '@prisma/client';
+import { MAX_DOCUMENTS_PER_USER, type DocumentDTO, type documentListQuerySchema } from '@pdf-analyzer/shared';
+import type { z } from 'zod';
 import { enqueueIngestion } from '../../jobs/ingestDocument';
 import { prisma } from '../../lib/db';
+import { containsText, pageArgs, toPage } from '../../lib/pagination';
 import { HttpError, notFound } from '../../lib/errors';
 import { storage } from '../../lib/storage';
 import { extractPages, hasExtractableText, looksLikePdf } from './pdf';
@@ -17,8 +19,38 @@ export const toDocumentDTO = (d: Document): DocumentDTO => ({
   createdAt: d.createdAt.toISOString()
 });
 
-export function listDocuments(userId: string) {
-  return prisma.document.findMany({ where: { userId }, orderBy: { createdAt: 'desc' } });
+const DOCUMENT_ORDER = {
+  newest: [{ createdAt: 'desc' }],
+  oldest: [{ createdAt: 'asc' }],
+  name: [{ name: 'asc' }, { createdAt: 'desc' }],
+  size: [{ sizeBytes: 'desc' }, { createdAt: 'desc' }]
+} satisfies Record<string, Prisma.DocumentOrderByWithRelationInput[]>;
+
+/** One page of the user's documents, optionally searched by name and filtered by status. */
+export async function listDocuments(userId: string, query: z.output<typeof documentListQuerySchema>) {
+  const where: Prisma.DocumentWhereInput = {
+    userId,
+    ...(query.q && { name: containsText(query.q) }),
+    ...(query.status && { status: query.status })
+  };
+  const [items, total] = await prisma.$transaction([
+    prisma.document.findMany({ where, orderBy: DOCUMENT_ORDER[query.sort], ...pageArgs(query) }),
+    prisma.document.count({ where })
+  ]);
+  return toPage(items.map(toDocumentDTO), total, query);
+}
+
+/** Renames the document, and its own chat, which is named after it. */
+export async function renameDocument(userId: string, id: string, name: string) {
+  const doc = await getOwnedDocument(userId, id);
+  const [updated] = await prisma.$transaction([
+    prisma.document.update({ where: { id: doc.id }, data: { name: safeFileName(name) } }),
+    prisma.chat.updateMany({
+      where: { userId, isDocumentChat: true, documents: { some: { id: doc.id } } },
+      data: { title: safeFileName(name) }
+    })
+  ]);
+  return updated;
 }
 
 /** Every lookup is scoped to the owner; someone else's document is simply "not found". */

@@ -29,6 +29,7 @@ export function documentsRouter(limiters: Limiters) {
   router.get('/', controller.list);
   router.post('/', limiters.upload, uploadOne, controller.upload);
   router.get('/:id', controller.get);
+  router.patch('/:id', controller.rename);
   router.get('/:id/file', controller.file);
   router.post('/:id/chat', controller.openChat); // get-or-create the document's own chat
   router.delete('/:id', controller.remove);

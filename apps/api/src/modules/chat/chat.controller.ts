@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import { askSchema, createChatSchema } from '@pdf-analyzer/shared';
+import { askSchema, chatListQuerySchema, createChatSchema, renameSchema } from '@pdf-analyzer/shared';
 import { openSse } from '../../lib/sse';
 import { userId } from '../../middleware/auth';
 import * as chats from './chat.service';
@@ -7,7 +7,12 @@ import * as chats from './chat.service';
 const idParam = (req: Request) => String(req.params.id);
 
 export async function list(req: Request, res: Response) {
-  res.json((await chats.listChats(userId(req))).map(chats.toChatDTO));
+  res.json(await chats.listChats(userId(req), chatListQuerySchema.parse(req.query)));
+}
+
+export async function rename(req: Request, res: Response) {
+  const { name } = renameSchema.parse(req.body);
+  res.json(chats.toChatDTO(await chats.renameChat(userId(req), idParam(req), name)));
 }
 
 export async function create(req: Request, res: Response) {

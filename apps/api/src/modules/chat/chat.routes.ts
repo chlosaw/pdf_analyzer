@@ -8,6 +8,7 @@ export function chatRouter(limiters: Limiters) {
   router.get('/', controller.list);
   router.post('/', controller.create); // multi-document chat
   router.get('/:id', controller.get);
+  router.patch('/:id', controller.rename);
   router.delete('/:id', controller.remove);
   router.post('/:id/messages', limiters.ask, controller.ask);
   router.delete('/:id/messages', controller.clear);

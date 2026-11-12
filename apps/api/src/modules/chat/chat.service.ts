@@ -1,13 +1,16 @@
-import type { Chat, Document, Message } from '@prisma/client';
+import type { Chat, Document, Message, Prisma } from '@prisma/client';
+import type { z } from 'zod';
 import {
   extractCitationIndices,
   type ChatDTO,
   type ChatDetailDTO,
   type Citation,
   type MessageDTO,
-  type StreamEvent
+  type StreamEvent,
+  type chatListQuerySchema
 } from '@pdf-analyzer/shared';
 import { prisma } from '../../lib/db';
+import { containsText, pageArgs, toPage } from '../../lib/pagination';
 import { isTest } from '../../lib/env';
 import { HttpError, notFound } from '../../lib/errors';
 import { searchSimilarChunks } from '../embeddings/embeddings.service';
@@ -47,8 +50,25 @@ export const toChatDetailDTO = (c: ChatWithDocs, messages: Message[]): ChatDetai
 
 // ---- chats ----------------------------------------------------------------------
 
-export function listChats(userId: string) {
-  return prisma.chat.findMany({ where: { userId }, include: { documents: true }, orderBy: { updatedAt: 'desc' } });
+/** One page of the user's chats, most recently active first; searchable by title or document name. */
+export async function listChats(userId: string, query: z.output<typeof chatListQuerySchema>) {
+  const where: Prisma.ChatWhereInput = {
+    userId,
+    ...(query.kind && { isDocumentChat: query.kind === 'document' }),
+    ...(query.q && {
+      OR: [{ title: containsText(query.q) }, { documents: { some: { name: containsText(query.q) } } }]
+    })
+  };
+  const [items, total] = await prisma.$transaction([
+    prisma.chat.findMany({ where, include: { documents: true }, orderBy: { updatedAt: 'desc' }, ...pageArgs(query) }),
+    prisma.chat.count({ where })
+  ]);
+  return toPage(items.map(toChatDTO), total, query);
+}
+
+export async function renameChat(userId: string, id: string, title: string) {
+  const chat = await getOwnedChat(userId, id);
+  return prisma.chat.update({ where: { id: chat.id }, data: { title }, include: { documents: true } });
 }
 
 export async function getOwnedChat(userId: string, id: string): Promise<ChatWithDocs> {

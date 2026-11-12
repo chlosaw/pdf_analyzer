@@ -1,4 +1,5 @@
 import type { Request, Response } from 'express';
+import { documentListQuerySchema, renameSchema } from '@pdf-analyzer/shared';
 import { HttpError } from '../../lib/errors';
 import { logSecurityEvent } from '../../lib/securityLog';
 import { userId } from '../../middleware/auth';
@@ -11,8 +12,12 @@ const SUSPICIOUS_UPLOAD = new Set(['UNSUPPORTED_TYPE', 'PDF_INVALID', 'TOO_MANY_
 const idParam = (req: Request) => String(req.params.id);
 
 export async function list(req: Request, res: Response) {
-  const docs = await documents.listDocuments(userId(req));
-  res.json(docs.map(documents.toDocumentDTO));
+  res.json(await documents.listDocuments(userId(req), documentListQuerySchema.parse(req.query)));
+}
+
+export async function rename(req: Request, res: Response) {
+  const { name } = renameSchema.parse(req.body);
+  res.json(documents.toDocumentDTO(await documents.renameDocument(userId(req), idParam(req), name)));
 }
 
 export async function upload(req: Request, res: Response) {
