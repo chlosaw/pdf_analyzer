@@ -13,5 +13,6 @@ RUN npm run build --workspace apps/web
 FROM nginx:1.27-alpine
 # Where /api is proxied to; override on Render with the API service's URL.
 ENV API_UPSTREAM=http://api:4000
-COPY apps/web/nginx.conf.template /etc/nginx/templates/default.conf.template
+COPY apps/web/nginx/default.conf.template /etc/nginx/templates/default.conf.template
+COPY apps/web/nginx/security-headers.conf /etc/nginx/security-headers.conf
 COPY --from=build /app/apps/web/dist /usr/share/nginx/html

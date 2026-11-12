@@ -13,6 +13,14 @@ async function register(page: Page) {
 }
 
 test('upload a PDF, ask a question, and jump to the cited page', async ({ page }) => {
+  // The preview server sends the production Content-Security-Policy: nothing the app does may violate it.
+  const cspViolations: string[] = [];
+  page.on('console', (msg) => {
+    if (/Content Security Policy/i.test(msg.text())) cspViolations.push(msg.text());
+  });
+  const res = await page.goto('/');
+  expect(res?.headers()['content-security-policy']).toContain("script-src 'self'");
+
   await register(page);
 
   await page.getByTestId('file-input').setInputFiles(fixture('freedonia.pdf'));
@@ -37,6 +45,8 @@ test('upload a PDF, ask a question, and jump to the cited page', async ({ page }
   await page.reload();
   await expect(page.getByTestId('assistant-message')).toHaveCount(1);
   await expect(page.getByText('What is the capital of Freedonia?')).toBeVisible();
+  await expect(page.locator('canvas').first()).toBeVisible(); // the PDF itself rendered (worker allowed)
+  expect(cspViolations).toEqual([]);
 });
 
 test('rejects a scanned PDF with a clear message', async ({ page }) => {
