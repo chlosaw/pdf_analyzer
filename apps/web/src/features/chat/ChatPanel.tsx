@@ -25,15 +25,17 @@ export function ChatPanel({ chat, onCite }: { chat: ChatDetailDTO; onCite: (c: C
   const [input, setInput] = useState('');
   const [pending, setPending] = useState<Pending | null>(null);
   const abortRef = useRef<AbortController | null>(null);
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
 
   const streaming = !!pending && !pending.error;
   const ready = chat.documents.some((d) => d.status === 'READY');
   const multi = chat.documents.length > 1;
 
   // Block body on purpose: newer browsers return a Promise from scroll methods, and an effect must not return one.
+  // Scroll only the message list. scrollIntoView would also scroll the page and push the header off screen.
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ block: 'end' });
+    const list = listRef.current;
+    if (list) list.scrollTop = list.scrollHeight;
   }, [chat.messages.length, pending?.answer, pending?.error]);
   useEffect(() => () => abortRef.current?.abort(), []);
 
@@ -90,9 +92,7 @@ export function ChatPanel({ chat, onCite }: { chat: ChatDetailDTO; onCite: (c: C
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className="flex h-11 shrink-0 items-center justify-between gap-2 border-b px-3">
-        <h1 className="truncate text-sm font-medium" title={chat.title}>
-          {chat.title}
-        </h1>
+        <h2 className="font-serif text-base font-semibold">Chat</h2>
         <Button
           variant="ghost"
           size="sm"
@@ -106,7 +106,7 @@ export function ChatPanel({ chat, onCite }: { chat: ChatDetailDTO; onCite: (c: C
         </Button>
       </div>
 
-      <div className="relative min-h-0 flex-1 space-y-5 overflow-y-auto p-4" aria-live="polite">
+      <div ref={listRef} className="relative min-h-0 flex-1 space-y-5 overflow-y-auto p-4" aria-live="polite">
         {empty && <QuestionBackdrop />}
         {empty && (
           <div className="relative flex h-full flex-col items-center justify-center gap-4 text-center">
@@ -161,7 +161,6 @@ export function ChatPanel({ chat, onCite }: { chat: ChatDetailDTO; onCite: (c: C
             </AssistantBubble>
           </>
         )}
-        <div ref={bottomRef} />
       </div>
 
       <form
