@@ -48,30 +48,21 @@ export function ChatPage() {
 
   return (
     <div className="flex h-full flex-col">
-      {/* Mobile pane switcher */}
-      <div className="flex shrink-0 gap-1 border-b p-1 lg:hidden">
-        {(['document', 'chat'] as const).map((t) => (
-          <Button
-            key={t}
-            variant={tab === t ? 'secondary' : 'ghost'}
-            size="sm"
-            className="flex-1 capitalize"
-            onClick={() => setTab(t)}
-          >
-            {t}
-          </Button>
-        ))}
-      </div>
-
-      <div className="grid min-h-0 flex-1 lg:grid-cols-[minmax(0,1fr)_minmax(380px,42%)]">
-        <section className={cn('min-h-0 flex-col border-r', tab === 'document' ? 'flex' : 'hidden lg:flex')}>
-          <div className="flex h-11 shrink-0 items-center gap-1 overflow-x-auto border-b px-2">
-            <Button asChild variant="ghost" size="icon" aria-label="Back to documents">
-              <Link to="/">
-                <ArrowLeft />
-              </Link>
-            </Button>
-            {docs.map((d) => (
+      {/* One toolbar on every screen size: a clear way back, what's open, and (on narrow screens) the pane switch */}
+      <div className="flex h-12 shrink-0 items-center gap-2 border-b px-2">
+        <Button asChild variant="ghost" size="sm" className="shrink-0">
+          <Link to="/">
+            <ArrowLeft /> Documents
+          </Link>
+        </Button>
+        <span aria-hidden className="h-5 w-px shrink-0 bg-border" />
+        <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto">
+          {docs.length === 1 ? (
+            <span className="truncate font-serif text-sm font-medium" title={docs[0].name}>
+              {docs[0].name}
+            </span>
+          ) : (
+            docs.map((d) => (
               <Button
                 key={d.id}
                 variant={d.id === activeDoc?.id ? 'secondary' : 'ghost'}
@@ -80,13 +71,36 @@ export function ChatPage() {
                 onClick={() => {
                   setActiveDocId(d.id);
                   setTarget({ page: 1 });
+                  setTab('document');
                 }}
               >
                 <span className="truncate">{d.name}</span>
                 {d.status === 'PROCESSING' && <Loader2 className="animate-spin" />}
               </Button>
-            ))}
-          </div>
+            ))
+          )}
+        </div>
+        <div className="flex shrink-0 rounded-lg bg-muted p-0.5 md:hidden" role="tablist" aria-label="Show">
+          {(['document', 'chat'] as const).map((t) => (
+            <button
+              key={t}
+              type="button"
+              role="tab"
+              aria-selected={tab === t}
+              onClick={() => setTab(t)}
+              className={cn(
+                'rounded-md px-3 py-1 text-xs font-medium capitalize text-muted-foreground transition-colors',
+                tab === t && 'bg-background text-foreground shadow-sm'
+              )}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid min-h-0 flex-1 md:grid-cols-[minmax(0,1fr)_minmax(340px,44%)]">
+        <section className={cn('min-h-0 flex-col border-r', tab === 'document' ? 'flex' : 'hidden md:flex')}>
           {activeDoc ? (
             <div className="min-h-0 flex-1">
               <PdfViewer
@@ -101,7 +115,7 @@ export function ChatPage() {
           )}
         </section>
 
-        <section className={cn('min-h-0', tab === 'chat' ? 'block' : 'hidden lg:block')}>
+        <section className={cn('min-h-0', tab === 'chat' ? 'block' : 'hidden md:block')}>
           <ChatPanel chat={chat.data} onCite={onCite} />
         </section>
       </div>
