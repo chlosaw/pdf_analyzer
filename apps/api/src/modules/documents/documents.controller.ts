@@ -27,15 +27,14 @@ export async function get(req: Request, res: Response) {
   res.json(documents.toDocumentDTO(await documents.getOwnedDocument(userId(req), idParam(req))));
 }
 
-/** Files are proxied through the API so the storage bucket can stay private. */
+/** Files are proxied through the API so the storage bucket can stay private. Not cached (see app.ts): they may be sensitive. */
 export async function file(req: Request, res: Response) {
   const { doc, data } = await documents.readDocumentFile(userId(req), idParam(req));
   res
     .set({
       'Content-Type': 'application/pdf',
       'Content-Length': String(data.length),
-      'Content-Disposition': `inline; filename*=UTF-8''${encodeURIComponent(doc.name)}`,
-      'Cache-Control': 'private, max-age=3600'
+      'Content-Disposition': `inline; filename*=UTF-8''${encodeURIComponent(doc.name)}`
     })
     .send(data);
 }

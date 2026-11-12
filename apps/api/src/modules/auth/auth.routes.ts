@@ -6,7 +6,7 @@ import * as controller from './auth.controller';
 export function authRouter(limiters: Limiters) {
   const router = Router();
   router.post('/register', limiters.auth, controller.register);
-  router.post('/login', limiters.auth, controller.login);
+  router.post('/login', limiters.auth, limiters.accountLockout, controller.login);
   router.post('/demo', limiters.demo, controller.demo);
   router.post('/logout', controller.logout);
   router.get('/me', requireAuth, controller.me);
