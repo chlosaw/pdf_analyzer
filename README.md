@@ -15,7 +15,8 @@ Chat with your PDFs: upload documents, ask questions, and get answers that strea
 - **Page citations.** `[1]` markers in the answer become clickable `p.3` chips. Clicking one opens that page in the PDF viewer and highlights the cited text.
 - **Streaming answers** over Server-Sent Events, with a Stop button. A partial answer is kept.
 - **Multi-document chat and saved history.** Select up to 10 PDFs and ask across all of them. Each document keeps its own chat history, and multi-document chats are saved too.
-- **Limits, errors and accounts.** A 15 MB cap checked on both client and server, a `%PDF-` signature check, scanned-PDF detection ("No text found"), clear errors for password-protected and corrupt files, and rate limits on sign-ins, uploads and questions. Sessions use a JWT in an httpOnly cookie with bcrypt password hashes, and every query is scoped to the signed-in user.
+- **Limits and errors.** A 15 MB cap checked on both client and server, a `%PDF-` signature check, scanned-PDF detection ("No text found"), and clear errors for password-protected and corrupt files.
+- **Security built against the OWASP Top 10.** Rate limits and account lockout, revocable server-side sessions in httpOnly cookies, bcrypt, CSRF origin checks, a strict Content-Security-Policy, parameterised SQL only (enforced by lint), prompt-injection defences, security event logging, and dependency, secret and CodeQL scanning in CI. [SECURITY.md](SECURITY.md) maps each risk to its controls and tests.
 - **Designed for the Mac.** Headings in New York, text in SF Pro and numbers in SF Mono, with light and dark themes. The sign-in page has a wall of "I have a question" in 26 languages, each set in a typeface that ships with macOS. Other systems fall back to their own fonts.
 - **Demo sandboxes.** Visitors try the app without signing up. Each gets a private account with the sample PDFs already indexed, and an hourly job deletes it, along with its stored files, after 24 hours.
 - **Runs offline.** With `AI_PROVIDER=fake` the app needs no API key: it uses deterministic embeddings and extractive answers, the same mode the tests run in.
@@ -89,7 +90,7 @@ npx playwright install chromium
 npm run build && npm run test:e2e
 ```
 
-- **API (Supertest):** auth (cookie flags, validation, duplicates, forged tokens, rate limit), uploads (chunked and embedded per page; a scanned PDF → 422, a non-PDF → 415, an oversized file → 413; upload rate limit), other users' data → 404, the streamed answer cites the right page, multi-document retrieval, history.
+- **API (Supertest):** auth (cookie flags, validation, duplicates, forged and `alg: none` tokens, sign-out revokes a copied token, rate limit); security (cross-site writes blocked, account lockout, security headers, SQL-looking input, no leaked internals); prompt-injection delimiters; uploads (chunked and embedded per page; a scanned PDF → 422, a non-PDF → 415, an oversized file → 413; upload rate limit), other users' data → 404, the streamed answer cites the right page, multi-document retrieval, history.
 - **Unit:** chunker edge cases, the SSE parser (frames split across network chunks), the shared schemas.
 - **E2E (Playwright):** register → upload → wait for indexing → ask → click the citation → the viewer is on page 2 → reload and the history is still there; a scanned PDF shows "No text found".
 

@@ -19,8 +19,21 @@ model User {
   createdAt    DateTime   @default(now())
   documents    Document[]
   chats        Chat[]
+  sessions     Session[]
 
   @@index([isDemo, createdAt])
+}
+
+/// One signed-in browser. The JWT carries its id, so signing out (or deleting the row) revokes the token at once.
+model Session {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 enum DocumentStatus {

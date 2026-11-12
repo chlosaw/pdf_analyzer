@@ -1,4 +1,5 @@
 import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
+import { MAX_PAGES } from '@pdf-analyzer/shared';
 import { HttpError } from '../../lib/errors';
 import { normalizeText, type PageText } from '../embeddings/chunk';
 
@@ -33,6 +34,9 @@ export async function extractPages(buffer: Buffer): Promise<ExtractedPdf> {
   }
 
   try {
+    if (pdf.numPages > MAX_PAGES) {
+      throw new HttpError(422, `This PDF has ${pdf.numPages} pages. The limit is ${MAX_PAGES}.`, 'TOO_MANY_PAGES');
+    }
     const pages: PageText[] = [];
     for (let n = 1; n <= pdf.numPages; n++) {
       const page = await pdf.getPage(n);

@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, type RequestHandler } from 'express';
 import multer from 'multer';
 import { MAX_FILE_SIZE_BYTES } from '@pdf-analyzer/shared';
 import { HttpError } from '../../lib/errors';
@@ -14,11 +14,20 @@ const upload = multer({
   }
 });
 
+/** A broken multipart body is the client's fault: answer 400, not 500. */
+const uploadOne: RequestHandler = (req, res, next) =>
+  upload.single('file')(req, res, (err?: unknown) => {
+    if (err && !(err instanceof HttpError) && !(err instanceof multer.MulterError)) {
+      return next(new HttpError(400, 'The upload was malformed. Please try again.', 'UPLOAD_ERROR'));
+    }
+    next(err);
+  });
+
 /** Mounted behind requireAuth. */
 export function documentsRouter(limiters: Limiters) {
   const router = Router();
   router.get('/', controller.list);
-  router.post('/', limiters.upload, upload.single('file'), controller.upload);
+  router.post('/', limiters.upload, uploadOne, controller.upload);
   router.get('/:id', controller.get);
   router.get('/:id/file', controller.file);
   router.post('/:id/chat', controller.openChat); // get-or-create the document's own chat

@@ -8,6 +8,9 @@ import { cn } from '@/lib/utils';
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/build/pdf.worker.min.mjs', import.meta.url).toString();
 
+// PDFs are untrusted input: never let pdf.js compile code from one (font programs), and keep the strict CSP happy.
+const PDF_OPTIONS = { isEvalSupported: false };
+
 export interface ViewerTarget {
   page: number;
   /** Text to highlight on the page (the cited chunk) */
@@ -136,6 +139,7 @@ export function PdfViewer({
       <div ref={containerRef} className="min-h-0 flex-1 overflow-auto p-4">
         <Document
           file={file}
+          options={PDF_OPTIONS}
           onLoadSuccess={({ numPages }) => setNumPages(numPages)}
           loading={<Spinner />}
           error={<p className="p-6 text-center text-sm text-destructive">Couldn't load this PDF.</p>}

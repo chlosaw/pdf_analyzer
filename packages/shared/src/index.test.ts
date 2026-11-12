@@ -20,6 +20,14 @@ describe('extractCitationIndices', () => {
 });
 
 describe('schemas', () => {
+  it('limits passwords to the 72 bytes bcrypt actually uses, counting multi-byte characters', () => {
+    const base = { name: 'A', email: 'a@b.co' };
+    expect(registerSchema.safeParse({ ...base, password: 'a'.repeat(72) }).success).toBe(true);
+    expect(registerSchema.safeParse({ ...base, password: 'a'.repeat(73) }).success).toBe(false);
+    // 30 emoji = 30 "characters" but 120 bytes: the tail would silently be ignored
+    expect(registerSchema.safeParse({ ...base, password: '🔒'.repeat(30) }).success).toBe(false);
+  });
+
   it('normalises email and enforces password length', () => {
     const ok = registerSchema.safeParse({ name: 'Ann', email: ' ANN@Example.com ', password: 'longenough' });
     expect(ok.success && ok.data.email).toBe('ann@example.com');

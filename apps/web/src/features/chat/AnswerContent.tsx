@@ -39,11 +39,24 @@ export const AnswerContent = memo(function AnswerContent({
           const c = byIndex.get(Number(href.slice(CITE_PREFIX.length)));
           if (c) return <CitationChip citation={c} onClick={() => onCite(c)} />;
         }
+        // Answers can echo text from an uploaded PDF, which may be hostile (prompt injection).
+        // Only plain web links, shown with their real destination on hover.
+        if (!href || !/^https?:\/\//i.test(href)) return <>{children}</>;
         return (
-          <a href={href} target="_blank" rel="noreferrer noopener" className="underline underline-offset-2">
+          <a
+            href={href}
+            title={href}
+            target="_blank"
+            rel="noreferrer noopener nofollow"
+            className="underline underline-offset-2"
+          >
             {children}
           </a>
         );
+      },
+      // Never load images the model wrote: their URL could smuggle chat contents out to another server.
+      img({ alt }) {
+        return alt ? <>{alt}</> : null;
       }
     }),
     [byIndex, onCite]

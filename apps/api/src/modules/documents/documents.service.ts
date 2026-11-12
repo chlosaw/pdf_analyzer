@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { Document } from '@prisma/client';
-import type { DocumentDTO } from '@pdf-analyzer/shared';
+import { MAX_DOCUMENTS_PER_USER, type DocumentDTO } from '@pdf-analyzer/shared';
 import { enqueueIngestion } from '../../jobs/ingestDocument';
 import { prisma } from '../../lib/db';
 import { HttpError, notFound } from '../../lib/errors';
@@ -42,6 +42,15 @@ export async function createDocument(userId: string, file: UploadedFile): Promis
   // The browser-provided MIME type is just a claim; check the file signature too.
   if (!looksLikePdf(file.buffer)) throw new HttpError(415, 'This file is not a valid PDF', 'UNSUPPORTED_TYPE');
 
+  const count = await prisma.document.count({ where: { userId } });
+  if (count >= MAX_DOCUMENTS_PER_USER) {
+    throw new HttpError(
+      409,
+      `You can keep up to ${MAX_DOCUMENTS_PER_USER} documents. Delete one to upload another.`,
+      'DOCUMENT_LIMIT'
+    );
+  }
+
   const extracted = await extractPages(file.buffer);
   if (!hasExtractableText(extracted)) {
     throw new HttpError(
@@ -56,10 +65,33 @@ export async function createDocument(userId: string, file: UploadedFile): Promis
   await storage.put(storageKey, file.buffer, 'application/pdf');
 
   const doc = await prisma.document.create({
-    data: { id, userId, name: file.originalName, storageKey, sizeBytes: file.size, pageCount: extracted.pageCount }
+    data: {
+      id,
+      userId,
+      name: safeFileName(file.originalName),
+      storageKey,
+      sizeBytes: file.size,
+      pageCount: extracted.pageCount
+    }
   });
   enqueueIngestion(doc.id, extracted.pages);
   return doc;
+}
+
+/**
+ * The name is only ever displayed and sent back in Content-Disposition (the storage key is our own UUID),
+ * but strip anything that could confuse a terminal, log or download dialog: control and bidi-override
+ * characters (which can make "exe.pdf" look like "fdp.exe"), path separators, and silly lengths.
+ */
+export function safeFileName(name: string): string {
+  const cleaned = name
+    .normalize('NFC')
+    // eslint-disable-next-line no-control-regex
+    .replace(/[\u0000-\u001f\u007f-\u009f\u200e\u200f\u202a-\u202e\u2066-\u2069]/g, '')
+    .replace(/[/\\]/g, '_')
+    .trim()
+    .slice(0, 200);
+  return cleaned || 'document.pdf';
 }
 
 export async function readDocumentFile(userId: string, id: string) {
