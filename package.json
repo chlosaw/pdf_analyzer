@@ -32,7 +32,8 @@
     "pdf-lib": "^1.17.1",
     "prettier": "^3.4.2",
     "typescript": "^5.7.2",
-    "typescript-eslint": "^8.72.1"
+    "typescript-eslint": "^8.72.1",
+    "vitest": "^4.1.12"
   },
   "engines": {
     "node": ">=20.16"

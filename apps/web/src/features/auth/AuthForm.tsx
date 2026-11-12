@@ -122,9 +122,15 @@ export function AuthForm<T>({
                       type={f.type}
                       autoComplete={f.autoComplete}
                       aria-invalid={!!errors[f.name]}
+                      // Screen readers read the error out with the field
+                      aria-describedby={errors[f.name] ? `${f.name}-error` : undefined}
                       className="bg-background"
                     />
-                    {errors[f.name] && <p className="text-xs text-destructive">{errors[f.name]![0]}</p>}
+                    {errors[f.name] && (
+                      <p id={`${f.name}-error`} className="text-xs text-destructive">
+                        {errors[f.name]![0]}
+                      </p>
+                    )}
                   </div>
                 ))}
                 {formError && (
