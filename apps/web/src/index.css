@@ -23,13 +23,12 @@
     --input: 36 18% 80%;
     --ring: 226 52% 30%;
     --highlight: 45 95% 58%;
-    /* Silk backdrop: white field, pale-to-cornflower blue ribbons, white sheen */
+    /* Silk backdrop: white field, pale-to-cornflower blue ribbons */
     --silk-base-from: 0 0% 100%;
     --silk-base-to: 207 60% 93%;
     --silk-1: 206 72% 80%;
     --silk-2: 208 64% 68%;
     --silk-3: 211 60% 54%;
-    --silk-sheen: 0 0% 100%;
     --radius: 0.75rem;
   }
 
@@ -58,7 +57,6 @@
       --silk-1: 212 50% 20%;
       --silk-2: 212 60% 30%;
       --silk-3: 210 70% 45%;
-      --silk-sheen: 205 85% 78%;
     }
   }
 
