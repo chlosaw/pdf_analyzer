@@ -2,6 +2,7 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
+import { docsRouter } from './docs/docs.routes';
 import { prisma } from './lib/db';
 import { env } from './lib/env';
 import { notFound } from './lib/errors';
@@ -56,6 +57,7 @@ export function createApp({ rateLimits, corsOrigins = env.CORS_ORIGINS }: AppOpt
     await prisma.$queryRaw`SELECT 1`;
     res.json({ ok: true });
   });
+  api.use(docsRouter());
   api.use('/auth', authRouter(limiters));
   api.use('/documents', requireAuth, documentsRouter(limiters));
   api.use('/chats', requireAuth, chatRouter(limiters));
