@@ -2,7 +2,7 @@ import { FileText } from 'lucide-react';
 import { memo, useMemo } from 'react';
 import ReactMarkdown, { type Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import type { Citation } from '@pdf-analyzer/shared';
+import { CITATION_GROUP_RE, parseCitationGroup, type Citation } from '@pdf-analyzer/shared';
 import { cn } from '@/lib/utils';
 
 const CITE_PREFIX = '#cite-';
@@ -24,7 +24,11 @@ export const AnswerContent = memo(function AnswerContent({
 
   const markdown = useMemo(
     () =>
-      content.replace(/\[(\d{1,2})\](?!\()/g, (m, n) => (byIndex.has(Number(n)) ? `[${n}](${CITE_PREFIX}${n})` : m)),
+      // "[1, 3]" or "[2-4]" become one chip per source; groups citing no known source stay as text.
+      content.replace(CITATION_GROUP_RE, (match, inner: string) => {
+        const known = parseCitationGroup(inner).filter((n) => byIndex.has(n));
+        return known.length ? known.map((n) => `[${n}](${CITE_PREFIX}${n})`).join('') : match;
+      }),
     [content, byIndex]
   );
 
@@ -67,7 +71,7 @@ function CitationChip({ citation, onClick }: { citation: Citation; onClick: () =
   );
 }
 
-/** The list of sources under an answer. */
+/** The pages an answer drew on, one chip per page (several sources often come from the same page). */
 export function SourceList({
   citations,
   onCite,
@@ -77,12 +81,19 @@ export function SourceList({
   onCite: (c: Citation) => void;
   showDocument: boolean;
 }) {
-  if (citations.length === 0) return null;
+  const pages = new Map<string, Citation>();
+  for (const c of [...citations].sort((a, b) => a.documentName.localeCompare(b.documentName) || a.page - b.page)) {
+    const key = `${c.documentId}:${c.page}`;
+    if (!pages.has(key)) pages.set(key, c);
+  }
+  if (pages.size === 0) return null;
+
   return (
-    <div className="mt-3 flex flex-wrap gap-1.5">
-      {citations.map((c) => (
+    <div className="mt-3 flex flex-wrap items-center gap-1.5">
+      <span className="text-xs text-muted-foreground">Sources</span>
+      {[...pages.values()].map((c) => (
         <button
-          key={c.index}
+          key={`${c.documentId}:${c.page}`}
           type="button"
           onClick={() => onCite(c)}
           title={c.snippet}
@@ -91,7 +102,6 @@ export function SourceList({
             'hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring'
           )}
         >
-          <span className="font-semibold tabular-nums text-muted-foreground">[{c.index}]</span>
           <FileText className="size-3 shrink-0 text-muted-foreground" />
           <span className="truncate">
             {showDocument && <>{c.documentName.replace(/\.pdf$/i, '')} · </>}

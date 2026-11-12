@@ -6,6 +6,14 @@ describe('extractCitationIndices', () => {
     expect(extractCitationIndices('A [3] b [1][3]. c [12]')).toEqual([1, 3, 12]);
   });
 
+  it('understands lists and ranges, which models often write', () => {
+    expect(extractCitationIndices('a [1, 3, 4, 5] b [2–3] c [7-8]')).toEqual([1, 2, 3, 4, 5, 7, 8]);
+  });
+
+  it('ignores markdown links', () => {
+    expect(extractCitationIndices('see [1](https://example.com) and [2]')).toEqual([2]);
+  });
+
   it('returns an empty list when nothing is cited', () => {
     expect(extractCitationIndices('No citations here [a]')).toEqual([]);
   });

@@ -123,11 +123,26 @@ export type StreamEvent =
 // Helpers
 // ---------------------------------------------------------------------------
 
-const CITATION_RE = /\[(\d{1,2})\]/g;
+/**
+ * A citation group: "[3]", "[1, 3, 4]" or "[2-4]" (any dash). Models are asked for "[1][3]" but don't
+ * always comply, so every form is understood. Not followed by "(" so markdown links are left alone.
+ */
+export const CITATION_GROUP_RE = /\[(\d{1,2}(?:\s*[,;\-\u2013\u2014]\s*\d{1,2})*)\](?!\()/g;
 
-/** Returns the source numbers referenced in an answer, e.g. "a [1] b [3][1]" -> [1, 3]. */
+/** "1, 3-5" -> [1, 3, 4, 5]. Ranges are capped so a typo like "1-99" can't explode. */
+export function parseCitationGroup(inner: string): number[] {
+  const out: number[] = [];
+  for (const part of inner.split(/\s*[,;]\s*/)) {
+    const [from, to] = part.split(/\s*[-\u2013\u2014]\s*/).map(Number);
+    if (to === undefined) out.push(from);
+    else for (let n = from; n <= Math.min(to, from + 20); n++) out.push(n);
+  }
+  return out;
+}
+
+/** Returns the source numbers referenced in an answer, e.g. "a [1] b [3][1] c [4, 6]" -> [1, 3, 4, 6]. */
 export function extractCitationIndices(text: string): number[] {
   const found = new Set<number>();
-  for (const match of text.matchAll(CITATION_RE)) found.add(Number(match[1]));
+  for (const match of text.matchAll(CITATION_GROUP_RE)) for (const n of parseCitationGroup(match[1])) found.add(n);
   return [...found].sort((a, b) => a - b);
 }
