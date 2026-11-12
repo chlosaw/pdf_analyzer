@@ -29,6 +29,10 @@ services:
         value: '2'
       - key: SEED_DEMO
         value: 'true'
+      - key: ADMIN_EMAIL # optional: an administrator created by the seed (admin page at /admin)
+        sync: false
+      - key: ADMIN_PASSWORD # 12+ characters; leave both empty and use make-admin instead if you prefer
+        sync: false
 
   - type: web
     name: pdf-analyzer-web

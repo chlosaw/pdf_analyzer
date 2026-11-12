@@ -10,7 +10,10 @@ import { prisma } from '../src/lib/db';
 async function main() {
   const args = process.argv.slice(2);
   const demote = args.includes('--demote');
-  const email = args.find((a) => !a.startsWith('--'))?.trim().toLowerCase();
+  const email = args
+    .find((a) => !a.startsWith('--'))
+    ?.trim()
+    .toLowerCase();
   if (!email) throw new Error('Usage: make-admin <email> [--demote]');
 
   const user = await prisma.user.findUnique({ where: { email } });
