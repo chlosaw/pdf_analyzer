@@ -5,7 +5,7 @@ import { createApp, type AppOptions } from '../src/app';
 import { prisma } from '../src/lib/db';
 
 export async function resetDb() {
-  await prisma.$executeRawUnsafe('TRUNCATE "User", "Document", "Chunk", "Chat", "Message" CASCADE');
+  await prisma.$executeRawUnsafe('TRUNCATE "User", "Session", "Document", "Chunk", "Chat", "Message" CASCADE');
 }
 
 /** Builds a real PDF; each string becomes one page. An empty string gives a page with no text (like a scan). */
