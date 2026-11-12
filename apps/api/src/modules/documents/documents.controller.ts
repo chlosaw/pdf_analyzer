@@ -5,6 +5,9 @@ import { userId } from '../../middleware/auth';
 import { getOrCreateDocumentChat, toChatDTO } from '../chat/chat.service';
 import * as documents from './documents.service';
 
+/** Rejections worth a security log line (a scanned or password-protected PDF is just a user mistake). */
+const SUSPICIOUS_UPLOAD = new Set(['UNSUPPORTED_TYPE', 'PDF_INVALID', 'TOO_MANY_PAGES', 'DOCUMENT_LIMIT']);
+
 const idParam = (req: Request) => String(req.params.id);
 
 export async function list(req: Request, res: Response) {
@@ -23,7 +26,8 @@ export async function upload(req: Request, res: Response) {
       size: file.size
     })
     .catch((err: unknown) => {
-      if (err instanceof HttpError) logSecurityEvent('upload_rejected', req, { code: err.code, size: file.size });
+      if (err instanceof HttpError && SUSPICIOUS_UPLOAD.has(err.code ?? ''))
+        logSecurityEvent('upload_rejected', req, { code: err.code, size: file.size });
       throw err;
     });
   res.status(201).json(documents.toDocumentDTO(doc));
