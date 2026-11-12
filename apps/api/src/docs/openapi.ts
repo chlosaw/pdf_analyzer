@@ -1,4 +1,5 @@
 import {
+  adminUserListQuerySchema,
   askSchema,
   chatListQuerySchema,
   createChatSchema,
@@ -7,7 +8,8 @@ import {
   loginSchema,
   MAX_FILE_SIZE_MB,
   registerSchema,
-  renameSchema
+  renameSchema,
+  updateRoleSchema
 } from '@pdf-analyzer/shared';
 import { z } from 'zod';
 
@@ -77,6 +79,7 @@ export const openApiDocument = {
     { name: 'Auth' },
     { name: 'Documents', description: 'Upload, list and manage PDFs' },
     { name: 'Chats', description: 'Questions and answers over one or more documents' },
+    { name: 'Admin', description: 'Administrators only (role ADMIN); everyone else gets 403' },
     { name: 'System' }
   ],
   components: {
@@ -103,12 +106,13 @@ export const openApiDocument = {
       },
       User: {
         type: 'object',
-        required: ['id', 'email', 'name', 'isDemo'],
+        required: ['id', 'email', 'name', 'isDemo', 'role'],
         properties: {
           id: { type: 'string', format: 'uuid' },
           email: { type: 'string', format: 'email' },
           name: { type: 'string' },
-          isDemo: { type: 'boolean', description: `Temporary sandbox, deleted after ${DEMO_SANDBOX_HOURS} hours` }
+          isDemo: { type: 'boolean', description: `Temporary sandbox, deleted after ${DEMO_SANDBOX_HOURS} hours` },
+          role: { type: 'string', enum: ['USER', 'ADMIN'] }
         }
       },
       Document: {
@@ -178,6 +182,30 @@ export const openApiDocument = {
         allOf: [
           ref('Chat'),
           { type: 'object', required: ['messages'], properties: { messages: { type: 'array', items: ref('Message') } } }
+        ]
+      },
+      AdminStats: {
+        type: 'object',
+        properties: {
+          users: { type: 'integer' },
+          demoUsers: { type: 'integer' },
+          documents: { type: 'integer' },
+          chats: { type: 'integer' },
+          questionsLast7Days: { type: 'integer' },
+          storageBytes: { type: 'integer' }
+        }
+      },
+      AdminUser: {
+        allOf: [
+          ref('User'),
+          {
+            type: 'object',
+            properties: {
+              createdAt: { type: 'string', format: 'date-time' },
+              documentCount: { type: 'integer' },
+              chatCount: { type: 'integer' }
+            }
+          }
         ]
       }
     }
@@ -389,6 +417,54 @@ export const openApiDocument = {
         tags: ['Chats'],
         summary: 'Clear the chat history',
         responses: { 204: { description: 'Cleared' }, 401: common[401], 404: common[404] }
+      }
+    },
+
+    // ---- admin ----
+    '/admin/stats': {
+      get: {
+        tags: ['Admin'],
+        summary: 'Usage totals',
+        responses: {
+          200: ok('Totals', ref('AdminStats')),
+          401: common[401],
+          403: error('Not an administrator (`code: FORBIDDEN`)')
+        }
+      }
+    },
+    '/admin/users': {
+      get: {
+        tags: ['Admin'],
+        summary: 'List users',
+        parameters: queryParams(adminUserListQuerySchema),
+        responses: {
+          200: ok('One page of users', pageOf('AdminUser')),
+          401: common[401],
+          403: error('Not an administrator (`code: FORBIDDEN`)')
+        }
+      }
+    },
+    '/admin/users/{id}': {
+      parameters: [idParam],
+      patch: {
+        tags: ['Admin'],
+        summary: "Change a user's role",
+        requestBody: body(updateRoleSchema),
+        responses: {
+          200: ok('Updated', ref('AdminUser')),
+          400: common[400],
+          403: error('Not an administrator, or changing your own role'),
+          404: common[404]
+        }
+      },
+      delete: {
+        tags: ['Admin'],
+        summary: 'Delete a user and all their data',
+        responses: {
+          204: { description: 'Deleted' },
+          403: error('Not an administrator, or deleting yourself'),
+          404: common[404]
+        }
       }
     }
   }

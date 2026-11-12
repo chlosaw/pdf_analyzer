@@ -13,7 +13,7 @@ export default defineConfig({
   // Production builds of both apps, with the offline AI provider. Run `npm run build` first.
   webServer: [
     {
-      command: 'npm run db:deploy -w apps/api && npm start -w apps/api',
+      command: 'npm run db:deploy -w apps/api && npm run db:seed -w apps/api && npm start -w apps/api',
       url: `http://localhost:${API_PORT}/api/health`,
       reuseExistingServer: !process.env.CI,
       timeout: 60_000,
@@ -25,7 +25,10 @@ export default defineConfig({
         JWT_SECRET: 'e2e-secret-that-is-at-least-32-characters-long',
         AI_PROVIDER: 'fake',
         STORAGE_DRIVER: 'local',
-        LOCAL_STORAGE_DIR: './uploads-e2e'
+        LOCAL_STORAGE_DIR: './uploads-e2e',
+        // The seed creates this administrator for e2e/admin.spec.ts
+        ADMIN_EMAIL: 'admin@e2e.test',
+        ADMIN_PASSWORD: 'e2e-admin-password'
       }
     },
     {

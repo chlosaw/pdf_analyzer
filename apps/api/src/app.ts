@@ -6,10 +6,11 @@ import { docsRouter } from './docs/docs.routes';
 import { prisma } from './lib/db';
 import { env } from './lib/env';
 import { notFound } from './lib/errors';
-import { requireAuth } from './middleware/auth';
+import { requireAuth, requireRole } from './middleware/auth';
 import { verifyOrigin } from './middleware/csrf';
 import { errorHandler } from './middleware/error';
 import { createLimiters, defaultRateLimits, type RateLimitConfig } from './middleware/rateLimit';
+import { adminRouter } from './modules/admin/admin.routes';
 import { authRouter } from './modules/auth/auth.routes';
 import { chatRouter } from './modules/chat/chat.routes';
 import { documentsRouter } from './modules/documents/documents.routes';
@@ -61,6 +62,7 @@ export function createApp({ rateLimits, corsOrigins = env.CORS_ORIGINS }: AppOpt
   api.use('/auth', authRouter(limiters));
   api.use('/documents', requireAuth, documentsRouter(limiters));
   api.use('/chats', requireAuth, chatRouter(limiters));
+  api.use('/admin', requireAuth, requireRole('ADMIN'), adminRouter());
   api.use((_req, _res, next) => next(notFound('Endpoint')));
   app.use('/api', api);
 

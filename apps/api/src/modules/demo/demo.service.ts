@@ -1,8 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import { DEMO_SANDBOX_HOURS } from '@pdf-analyzer/shared';
 import { prisma } from '../../lib/db';
-import { storage } from '../../lib/storage';
-import { hashPassword } from '../auth/auth.service';
+import { deleteUsers, hashPassword } from '../auth/auth.service';
 import { createSampleDocument, DEMO_DOCUMENTS } from './demo.fixtures';
 
 const DEMO_EMAIL_DOMAIN = 'demo.pdf-analyzer.dev';
@@ -30,12 +29,7 @@ export async function createSandbox() {
 export async function deleteExpiredSandboxes(now = Date.now()): Promise<number> {
   const expired = await prisma.user.findMany({
     where: { isDemo: true, createdAt: { lt: new Date(now - SANDBOX_LIFETIME_MS) } },
-    select: { id: true, documents: { select: { storageKey: true } } }
+    select: { id: true }
   });
-  if (expired.length === 0) return 0;
-
-  // A file that fails to delete is only orphaned storage; never let it keep the account alive.
-  await Promise.allSettled(expired.flatMap((u) => u.documents.map((d) => storage.delete(d.storageKey))));
-  const { count } = await prisma.user.deleteMany({ where: { id: { in: expired.map((u) => u.id) } } });
-  return count;
+  return deleteUsers(expired.map((u) => u.id));
 }

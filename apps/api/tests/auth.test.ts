@@ -13,7 +13,13 @@ describe('auth', () => {
     const agent = request.agent(createApp());
     const res = await agent.post('/api/auth/register').send(user).expect(201);
 
-    expect(res.body).toEqual({ id: expect.any(String), name: 'Ada', email: 'ada@example.com', isDemo: false });
+    expect(res.body).toEqual({
+      id: expect.any(String),
+      name: 'Ada',
+      email: 'ada@example.com',
+      isDemo: false,
+      role: 'USER'
+    });
     expect(res.body).not.toHaveProperty('passwordHash');
     const cookie = res.headers['set-cookie'][0];
     expect(cookie).toMatch(/^token=/);

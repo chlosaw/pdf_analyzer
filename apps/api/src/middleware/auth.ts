@@ -1,3 +1,4 @@
+import type { Role } from '@prisma/client';
 import type { CookieOptions, NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../lib/db';
@@ -61,15 +62,25 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
     return next(new HttpError(401, 'Not signed in', 'UNAUTHENTICATED'));
   }
   const claims = readToken(req);
-  const session = claims && (await prisma.session.findUnique({ where: { id: claims.sid } }));
+  const session =
+    claims &&
+    (await prisma.session.findUnique({ where: { id: claims.sid }, include: { user: { select: { role: true } } } }));
   if (!claims || !session || session.userId !== claims.sub || session.expiresAt <= new Date()) {
     logSecurityEvent('invalid_session', req, { reason: claims ? 'revoked_or_expired' : 'bad_token' });
     res.clearCookie(AUTH_COOKIE, cookieOptions);
     return next(new HttpError(401, 'Session expired, please sign in again', 'UNAUTHENTICATED'));
   }
   req.userId = session.userId;
+  req.userRole = session.user.role;
   next();
 }
+
+/** Role-based access control. Use after requireAuth; anyone without the role gets 403. */
+export const requireRole = (role: Role) => (req: Request, _res: Response, next: NextFunction) => {
+  if (req.userRole === role) return next();
+  logSecurityEvent('forbidden', req, { required: role });
+  next(new HttpError(403, 'You do not have permission to do that', 'FORBIDDEN'));
+};
 
 /** Use after requireAuth. */
 export function userId(req: Request): string {

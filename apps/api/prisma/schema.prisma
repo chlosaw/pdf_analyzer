@@ -9,6 +9,11 @@ datasource db {
   extensions = [vector]
 }
 
+enum Role {
+  USER
+  ADMIN
+}
+
 model User {
   id           String     @id @default(uuid())
   email        String     @unique
@@ -16,6 +21,8 @@ model User {
   passwordHash String
   /// Throwaway "Try the demo" visitor; deleted with all their data after DEMO_SANDBOX_HOURS
   isDemo       Boolean    @default(false)
+  /// ADMIN can see usage totals and manage users; nothing else differs
+  role         Role       @default(USER)
   createdAt    DateTime   @default(now())
   documents    Document[]
   chats        Chat[]

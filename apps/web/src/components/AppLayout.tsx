@@ -1,4 +1,4 @@
-import { LogOut } from 'lucide-react';
+import { LogOut, ShieldCheck } from 'lucide-react';
 import { Link, Outlet, useNavigate } from 'react-router-dom';
 import { Logo } from '@/components/Logo';
 import { Button } from '@/components/ui/button';
@@ -17,6 +17,13 @@ export function AppLayout() {
           <Logo />
         </Link>
         <div className="flex items-center gap-3">
+          {user?.role === 'ADMIN' && (
+            <Button asChild variant="ghost" size="sm">
+              <Link to="/admin">
+                <ShieldCheck /> Admin
+              </Link>
+            </Button>
+          )}
           <span className="hidden text-sm text-muted-foreground sm:inline">{user?.name}</span>
           <Button
             variant="ghost"

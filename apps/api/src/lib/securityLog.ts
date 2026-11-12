@@ -2,7 +2,15 @@ import type { Request } from 'express';
 import { isTest } from './env';
 
 export type SecurityEvent =
-  'login_failed' | 'account_locked' | 'rate_limited' | 'csrf_blocked' | 'invalid_session' | 'upload_rejected';
+  | 'login_failed'
+  | 'account_locked'
+  | 'forbidden'
+  | 'role_changed'
+  | 'user_deleted'
+  | 'rate_limited'
+  | 'csrf_blocked'
+  | 'invalid_session'
+  | 'upload_rejected';
 
 /**
  * Security-relevant events as one JSON line each, so a log platform (Render, Datadog, ...) can alert on them.
