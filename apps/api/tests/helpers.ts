@@ -4,8 +4,20 @@ import type { DocumentDTO, StreamEvent } from '@pdf-analyzer/shared';
 import { createApp, type AppOptions } from '../src/app';
 import { prisma } from '../src/lib/db';
 
+/**
+ * Empties every table. A previous test's background indexing may still be writing, and TRUNCATE can then
+ * deadlock with it (Postgres aborts one side), so retry a few times.
+ */
 export async function resetDb() {
-  await prisma.$executeRawUnsafe('TRUNCATE "User", "Session", "Document", "Chunk", "Chat", "Message" CASCADE');
+  for (let attempt = 1; ; attempt++) {
+    try {
+      await prisma.$executeRawUnsafe('TRUNCATE "User", "Session", "Document", "Chunk", "Chat", "Message" CASCADE');
+      return;
+    } catch (err) {
+      if (attempt >= 5 || !/deadlock|40P01/i.test(String(err))) throw err;
+      await new Promise((r) => setTimeout(r, 50 * attempt));
+    }
+  }
 }
 
 /** Builds a real PDF; each string becomes one page. An empty string gives a page with no text (like a scan). */

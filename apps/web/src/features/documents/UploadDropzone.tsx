@@ -2,7 +2,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { FileUp, Loader2 } from 'lucide-react';
 import { useRef, useState, type DragEvent } from 'react';
 import { toast } from 'sonner';
-import { MAX_FILE_SIZE_BYTES, MAX_FILE_SIZE_MB, type DocumentDTO } from '@pdf-analyzer/shared';
+import { MAX_FILE_SIZE_BYTES, MAX_FILE_SIZE_MB } from '@pdf-analyzer/shared';
 import { uploadDocument } from '@/api/client';
 import { keys } from '@/api/queries';
 import { cn } from '@/lib/utils';
@@ -25,7 +25,6 @@ export function UploadDropzone() {
     setProgress(0);
     try {
       const doc = await uploadDocument(file, setProgress);
-      qc.setQueryData<DocumentDTO[]>(keys.documents, (old = []) => [doc, ...old]);
       toast.success(`${doc.name} uploaded`, { description: 'Indexing it now. This usually takes a few seconds.' });
     } catch (err) {
       toast.error(`Couldn't upload ${file.name}`, { description: (err as Error).message, duration: 8000 });

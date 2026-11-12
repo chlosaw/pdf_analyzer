@@ -75,7 +75,7 @@ describe('chats', () => {
     expect(sources[0].documentName).toBe('soup.pdf');
 
     const list = await agent.get('/api/chats').expect(200);
-    expect(list.body).toHaveLength(1);
+    expect(list.body.items).toHaveLength(1);
   });
 
   it('validates questions and document ownership', async () => {

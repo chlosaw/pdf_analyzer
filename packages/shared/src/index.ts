@@ -56,6 +56,35 @@ export const askSchema = z.object({
 });
 export type AskInput = z.infer<typeof askSchema>;
 
+/** A new name for a document or chat */
+export const renameSchema = z.object({
+  name: z.string().trim().min(1, 'Name is required').max(200, 'Names are limited to 200 characters')
+});
+export type RenameInput = z.infer<typeof renameSchema>;
+
+// ---- list queries (?q=&page=&pageSize=&...) -----------------------------------
+
+export const MAX_PAGE_SIZE = 50;
+
+const pagination = {
+  q: z.string().trim().max(200).optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(MAX_PAGE_SIZE).default(20)
+};
+
+export const documentListQuerySchema = z.object({
+  ...pagination,
+  status: z.enum(['PROCESSING', 'READY', 'FAILED']).optional(),
+  sort: z.enum(['newest', 'oldest', 'name', 'size']).default('newest')
+});
+export type DocumentListQuery = Partial<z.output<typeof documentListQuerySchema>>;
+
+export const chatListQuerySchema = z.object({
+  ...pagination,
+  kind: z.enum(['document', 'multi']).optional()
+});
+export type ChatListQuery = Partial<z.output<typeof chatListQuerySchema>>;
+
 // ---------------------------------------------------------------------------
 // API response shapes
 // ---------------------------------------------------------------------------
@@ -111,6 +140,16 @@ export interface ChatDTO {
 
 export interface ChatDetailDTO extends ChatDTO {
   messages: MessageDTO[];
+}
+
+/** One page of a list endpoint's results */
+export interface Page<T> {
+  items: T[];
+  /** Matching items across all pages */
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
 }
 
 export interface ApiErrorBody {

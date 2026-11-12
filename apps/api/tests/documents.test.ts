@@ -29,7 +29,7 @@ describe('documents', () => {
     expect(chunks.every((c) => c.dims === 768)).toBe(true);
 
     const list = await agent.get('/api/documents').expect(200);
-    expect(list.body).toHaveLength(1);
+    expect(list.body.items).toHaveLength(1);
   });
 
   it('serves the original file back', async () => {
@@ -131,7 +131,7 @@ describe('documents', () => {
     await bob.get(`/api/documents/${body.id}`).expect(404);
     await bob.get(`/api/documents/${body.id}/file`).expect(404);
     await bob.delete(`/api/documents/${body.id}`).expect(404);
-    expect((await bob.get('/api/documents').expect(200)).body).toEqual([]);
+    expect((await bob.get('/api/documents').expect(200)).body.items).toEqual([]);
   });
 
   it('deletes a document with its chunks and its chat', async () => {
