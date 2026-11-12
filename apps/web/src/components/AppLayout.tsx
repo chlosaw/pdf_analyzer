@@ -11,7 +11,7 @@ export function AppLayout() {
   const navigate = useNavigate();
 
   return (
-    <div className="flex h-dvh flex-col">
+    <div className="flex h-dvh flex-col overflow-hidden">
       <header className="flex h-14 shrink-0 items-center justify-between border-b bg-background/80 px-4 backdrop-blur">
         <Link to="/" aria-label="PDF Analyzer, home">
           <Logo />
