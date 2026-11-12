@@ -5,8 +5,6 @@ import { expect, test, type Page } from '@playwright/test';
 async function expectNoViolations(page: Page) {
   const { violations } = await new AxeBuilder({ page })
     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
-    // The faint multilingual backdrop is pure decoration (aria-hidden), which WCAG 1.4.3 exempts from contrast
-    .exclude('[aria-hidden="true"]')
     .analyze();
   expect(violations.map((v) => `${v.id}: ${v.help} (${v.nodes.map((n) => n.target.join(' ')).join(', ')})`)).toEqual(
     []

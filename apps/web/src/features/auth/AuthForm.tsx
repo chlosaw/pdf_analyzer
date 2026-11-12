@@ -2,7 +2,7 @@ import { BookOpenCheck, History, Loader2, Quote } from 'lucide-react';
 import { useState, type FormEvent, type ReactNode } from 'react';
 import type { ZodSchema } from 'zod';
 import { Logo } from '@/components/Logo';
-import { QuestionBackdrop } from '@/components/QuestionBackdrop';
+import { GradientBackdrop } from '@/components/GradientBackdrop';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -65,14 +65,9 @@ export function AuthForm<T>({
 
   return (
     <div className="relative min-h-dvh overflow-hidden">
-      <QuestionBackdrop intensity="bold" />
+      <GradientBackdrop intensity="bold" />
       <div className="relative mx-auto grid min-h-dvh max-w-6xl items-center gap-10 px-4 py-10 lg:grid-cols-[1.1fr_1fr] lg:px-8">
-        <section className="relative isolate hidden lg:block">
-          {/* A soft glow in the page colour, so the backdrop fades out behind the text */}
-          <div
-            aria-hidden
-            className="absolute -inset-x-24 -inset-y-20 -z-10 bg-[radial-gradient(closest-side,hsl(var(--background))_55%,hsl(var(--background)/0))]"
-          />
+        <section className="relative hidden lg:block">
           <Logo size="lg" />
           <h1 className="mt-10 text-6xl font-semibold leading-[1.05] tracking-tight">
             Ask your PDFs

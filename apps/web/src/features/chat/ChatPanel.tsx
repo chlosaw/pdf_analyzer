@@ -3,7 +3,7 @@ import { ArrowUp, Bot, Eraser, Loader2, Square, User } from 'lucide-react';
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { toast } from 'sonner';
 import { MAX_QUESTION_LENGTH, type ChatDetailDTO, type Citation, type MessageDTO } from '@pdf-analyzer/shared';
-import { QuestionBackdrop } from '@/components/QuestionBackdrop';
+import { GradientBackdrop } from '@/components/GradientBackdrop';
 import { AnswerContent, SourceList } from '@/features/chat/AnswerContent';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -107,7 +107,7 @@ export function ChatPanel({ chat, onCite }: { chat: ChatDetailDTO; onCite: (c: C
       </div>
 
       <div ref={listRef} className="relative min-h-0 flex-1 space-y-5 overflow-y-auto p-4" aria-live="polite">
-        {empty && <QuestionBackdrop />}
+        {empty && <GradientBackdrop />}
         {empty && (
           <div className="relative flex h-full flex-col items-center justify-center gap-4 text-center">
             <div className="space-y-1">
