@@ -30,8 +30,8 @@ interface ParsedSource {
 }
 
 function parseSources(prompt: string): { sources: ParsedSource[]; question: string } {
-  const question = /Question: ([\s\S]*)$/.exec(prompt)?.[1] ?? '';
-  const sources = [...prompt.matchAll(/\[(\d+)\] \(.+?, page \d+\)\n([\s\S]*?)(?=\n\n---\n\n)/g)].map((m) => ({
+  const question = /<question>\n([\s\S]*?)\n<\/question>/.exec(prompt)?.[1] ?? '';
+  const sources = [...prompt.matchAll(/<source index="(\d+)"[^>]*>\n([\s\S]*?)\n<\/source>/g)].map((m) => ({
     index: Number(m[1]),
     text: m[2]
   }));
