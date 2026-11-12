@@ -23,7 +23,10 @@
     --input: 36 18% 80%;
     --ring: 226 52% 30%;
     --highlight: 45 95% 58%;
-    --backdrop-ink: 226 40% 30%;
+    /* Gradient backdrop: ink blue, gold and clay */
+    --glow-a: 226 75% 72%;
+    --glow-b: 42 92% 70%;
+    --glow-c: 14 70% 78%;
     --radius: 0.75rem;
   }
 
@@ -47,7 +50,9 @@
       --input: 30 5% 25%;
       --ring: 222 75% 74%;
       --highlight: 45 90% 50%;
-      --backdrop-ink: 222 60% 80%;
+      --glow-a: 226 65% 38%;
+      --glow-b: 38 75% 32%;
+      --glow-c: 340 45% 30%;
     }
   }
 
@@ -97,4 +102,30 @@
 .prose-answer th,
 .prose-answer td {
   @apply border-b px-2 py-1;
+}
+
+/* Soft gradient backdrop (GradientBackdrop.tsx): three blurred colour fields that drift very slowly */
+.gradient-backdrop {
+  background:
+    radial-gradient(40% 45% at 18% 22%, hsl(var(--glow-a) / 0.55), transparent 70%),
+    radial-gradient(38% 42% at 82% 18%, hsl(var(--glow-b) / 0.5), transparent 70%),
+    radial-gradient(45% 50% at 65% 85%, hsl(var(--glow-c) / 0.45), transparent 70%),
+    radial-gradient(35% 40% at 15% 85%, hsl(var(--glow-a) / 0.3), transparent 70%);
+  filter: blur(40px);
+  animation: gradient-drift 30s ease-in-out infinite alternate;
+}
+
+@keyframes gradient-drift {
+  from {
+    transform: translate3d(-3%, -2%, 0) rotate(0deg) scale(1);
+  }
+  to {
+    transform: translate3d(3%, 2%, 0) rotate(8deg) scale(1.08);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gradient-backdrop {
+    animation: none;
+  }
 }
