@@ -43,43 +43,46 @@ export function DashboardPage() {
   }
 
   return (
-    <div className="relative h-full overflow-y-auto">
-      <SilkBackdrop className="fixed top-14" />
-      <div className="relative mx-auto max-w-4xl space-y-8 px-4 py-10">
-        <section className="space-y-4">
-          <div>
-            <h1 className="text-4xl font-semibold tracking-tight">Your documents</h1>
-            <p className="mt-2 text-muted-foreground">
-              Open a document to chat with it, or select several to ask questions across all of them.
-            </p>
-          </div>
-          <UploadDropzone />
-        </section>
-
-        <section className="space-y-3">
-          {selected.size > 0 && (
-            <div className="sticky top-0 z-10 flex items-center justify-between gap-3 rounded-lg border bg-background/95 p-3 shadow-sm backdrop-blur">
-              <span className="text-sm">
-                {selected.size} selected
-                {selected.size === 1 && (
-                  <span className="text-muted-foreground">: select one more for a multi-document chat</span>
-                )}
-              </span>
-              <div className="flex gap-2">
-                <Button variant="ghost" size="sm" onClick={() => setSelected(new Set())}>
-                  Clear
-                </Button>
-                <Button size="sm" disabled={selected.size < 2 || createChat.isPending} onClick={startMultiChat}>
-                  {createChat.isPending ? <Loader2 className="animate-spin" /> : <Layers />}
-                  Ask across {selected.size} documents
-                </Button>
-              </div>
+    // The backdrop fills the area below the header and banner and stays put while the list scrolls over it.
+    <div className="relative h-full">
+      <SilkBackdrop />
+      <div className="relative h-full overflow-y-auto">
+        <div className="relative mx-auto max-w-4xl space-y-8 px-4 py-10">
+          <section className="space-y-4">
+            <div>
+              <h1 className="text-4xl font-semibold tracking-tight">Your documents</h1>
+              <p className="mt-2 text-muted-foreground">
+                Open a document to chat with it, or select several to ask questions across all of them.
+              </p>
             </div>
-          )}
-          <DocumentList selected={selected} onToggle={toggle} onDeleted={unselect} />
-        </section>
+            <UploadDropzone />
+          </section>
 
-        <MultiChatList />
+          <section className="space-y-3">
+            {selected.size > 0 && (
+              <div className="sticky top-0 z-10 flex items-center justify-between gap-3 rounded-lg border bg-background/95 p-3 shadow-sm backdrop-blur">
+                <span className="text-sm">
+                  {selected.size} selected
+                  {selected.size === 1 && (
+                    <span className="text-muted-foreground">: select one more for a multi-document chat</span>
+                  )}
+                </span>
+                <div className="flex gap-2">
+                  <Button variant="ghost" size="sm" onClick={() => setSelected(new Set())}>
+                    Clear
+                  </Button>
+                  <Button size="sm" disabled={selected.size < 2 || createChat.isPending} onClick={startMultiChat}>
+                    {createChat.isPending ? <Loader2 className="animate-spin" /> : <Layers />}
+                    Ask across {selected.size} documents
+                  </Button>
+                </div>
+              </div>
+            )}
+            <DocumentList selected={selected} onToggle={toggle} onDeleted={unselect} />
+          </section>
+
+          <MultiChatList />
+        </div>
       </div>
     </div>
   );
