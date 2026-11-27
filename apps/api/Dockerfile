@@ -1,5 +1,5 @@
 # Build context is the repo root (see docker-compose.yml).
-FROM node:22-slim AS build
+FROM node:25-slim AS build
 WORKDIR /app
 # Prisma's query engine needs OpenSSL
 RUN apt-get update -y && apt-get install -y --no-install-recommends openssl && rm -rf /var/lib/apt/lists/*
@@ -13,7 +13,7 @@ COPY packages/shared packages/shared
 COPY apps/api apps/api
 RUN npm run build --workspace apps/api
 
-FROM node:22-slim
+FROM node:25-slim
 WORKDIR /app
 RUN apt-get update -y && apt-get install -y --no-install-recommends openssl && rm -rf /var/lib/apt/lists/*
 ENV NODE_ENV=production
