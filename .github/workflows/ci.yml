@@ -35,7 +35,7 @@ jobs:
       E2E_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/pdf_analyzer_e2e
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-node@v4
         with:
@@ -71,7 +71,7 @@ jobs:
     name: Dependency audit + secret scan
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0 # scan the whole history: a key deleted later is still leaked
       - uses: actions/setup-node@v4
@@ -89,6 +89,6 @@ jobs:
     name: Docker images build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: cp .env.example .env
       - run: docker compose build
