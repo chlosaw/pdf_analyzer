@@ -1,5 +1,5 @@
 # Build context is the repo root (see docker-compose.yml).
-FROM node:22-slim AS build
+FROM node:25-slim AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
 COPY packages/shared/package.json packages/shared/
